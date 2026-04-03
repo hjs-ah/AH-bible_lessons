@@ -1,0 +1,1333 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Don't Come Empty — First Fruits & Feast Giving</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,700;0,900;1,400;1,700&family=Outfit:wght@200;300;400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   THEME VARIABLES
+   ============================================================ */
+:root {
+  --gold: #B8860B;
+  --gold-bright: #C9960E;
+  --gold-dim: rgba(184,134,11,0.12);
+  --gold-border: rgba(184,134,11,0.28);
+  --olive: #5A6E30;
+  --rust: #8B3A22;
+  --facilitator-color: #4A7FB5;
+
+  /* LIGHT THEME (default) */
+  --bg-dark:  #F5F0E8;
+  --bg-mid:   #EDE6D8;
+  --bg-warm:  #E8DDD0;
+  --text-main: #1C1408;
+  --text-muted: rgba(28,20,8,0.62);
+  --text-dim:   rgba(28,20,8,0.38);
+  --card-bg:    rgba(255,255,255,0.75);
+  --card-bg-dim: rgba(255,255,255,0.45);
+  --scripture-bg: rgba(184,134,11,0.07);
+  --table-header-bg: rgba(184,134,11,0.1);
+  --table-row-hover: rgba(184,134,11,0.05);
+  --table-border: rgba(184,134,11,0.15);
+  --nav-bg: rgba(245,240,232,0.92);
+  --nav-border: rgba(184,134,11,0.25);
+  --badge-bg: rgba(184,134,11,0.1);
+  --overline-color: var(--gold);
+  --split-border: rgba(184,134,11,0.2);
+  --principle-border: rgba(184,134,11,0.12);
+  --glow-color-1: rgba(184,134,11,0.1);
+  --glow-color-2: rgba(90,110,48,0.08);
+  --editor-overlay: rgba(0,0,0,0.55);
+  --editor-bg: #fff;
+  --editor-text: #1C1408;
+  --editor-border: #d0c5b0;
+  --shadow: 0 2px 16px rgba(0,0,0,0.08);
+}
+
+[data-theme="dark"] {
+  --gold: #D4A843;
+  --gold-bright: #F0C96A;
+  --gold-dim: rgba(212,168,67,0.15);
+  --gold-border: rgba(212,168,67,0.3);
+  --olive: #6B7C45;
+  --rust: #9B4A30;
+  --facilitator-color: #7AB3E0;
+
+  --bg-dark:  #0D0A04;
+  --bg-mid:   #16120A;
+  --bg-warm:  #1E1810;
+  --text-main: #F0E8D4;
+  --text-muted: rgba(240,232,212,0.55);
+  --text-dim:   rgba(240,232,212,0.35);
+  --card-bg:    rgba(247,240,228,0.06);
+  --card-bg-dim: rgba(247,240,228,0.03);
+  --scripture-bg: rgba(212,168,67,0.06);
+  --table-header-bg: rgba(212,168,67,0.12);
+  --table-row-hover: rgba(212,168,67,0.04);
+  --table-border: rgba(212,168,67,0.08);
+  --nav-bg: rgba(13,10,4,0.88);
+  --nav-border: rgba(212,168,67,0.3);
+  --badge-bg: rgba(212,168,67,0.1);
+  --overline-color: var(--gold);
+  --split-border: rgba(212,168,67,0.2);
+  --principle-border: rgba(212,168,67,0.1);
+  --glow-color-1: rgba(212,168,67,0.12);
+  --glow-color-2: rgba(107,124,69,0.1);
+  --editor-overlay: rgba(0,0,0,0.72);
+  --editor-bg: #1E1810;
+  --editor-text: #F0E8D4;
+  --editor-border: #4a3820;
+  --shadow: 0 2px 24px rgba(0,0,0,0.4);
+}
+
+/* ============================================================
+   RESET & BASE
+   ============================================================ */
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
+html, body {
+  width:100%; height:100%;
+  overflow:hidden;
+  background: var(--bg-dark);
+  font-family: 'Outfit', sans-serif;
+  color: var(--text-main);
+  transition: background 0.4s, color 0.4s;
+}
+
+/* ============================================================
+   SLIDE ENGINE
+   ============================================================ */
+.deck {
+  width: 100vw;
+  height: 100vh;
+  position: relative;
+  overflow: hidden;
+}
+
+.slide {
+  position: absolute;
+  inset: 0;
+  width: 100%; height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.65s cubic-bezier(0.4,0,0.2,1);
+  overflow: hidden;
+  padding-bottom: 110px;
+}
+
+.slide.active { opacity:1; pointer-events:all; }
+
+.bg-dark  { background: var(--bg-dark);  }
+.bg-mid   { background: var(--bg-mid);   }
+.bg-warm  { background: var(--bg-warm);  }
+
+/* grain */
+.slide::after {
+  content:'';
+  position:absolute; inset:0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.025'/%3E%3C/svg%3E");
+  pointer-events:none; z-index:1;
+}
+.slide > * { position:relative; z-index:2; }
+
+/* glows */
+.glow-top {
+  position:absolute; top:-20%; left:50%;
+  transform:translateX(-50%);
+  width:70%; height:60%;
+  background: radial-gradient(ellipse, var(--glow-color-1) 0%, transparent 70%);
+  pointer-events:none; z-index:0;
+}
+.glow-bottom-left {
+  position:absolute; bottom:-10%; left:-10%;
+  width:50%; height:50%;
+  background: radial-gradient(ellipse, var(--glow-color-2) 0%, transparent 70%);
+  pointer-events:none; z-index:0;
+}
+.glow-center {
+  position:absolute; top:50%; left:50%;
+  transform:translate(-50%,-50%);
+  width:80%; height:80%;
+  background: radial-gradient(ellipse, var(--glow-color-1) 0%, transparent 65%);
+  pointer-events:none; z-index:0;
+}
+
+/* ============================================================
+   TYPOGRAPHY
+   ============================================================ */
+.deco-line {
+  width:60px; height:1px;
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  margin:0 auto;
+}
+
+.overline {
+  font-size: clamp(9px,1.5vw,11px);
+  letter-spacing:4px; text-transform:uppercase;
+  color: var(--overline-color);
+  font-weight:600;
+  display:flex; align-items:center; gap:14px;
+  margin-bottom:20px;
+}
+.overline::before,.overline::after {
+  content:''; width:24px; height:1px;
+  background:var(--gold); opacity:0.5;
+}
+
+.t-hero {
+  font-family:'Playfair Display',serif;
+  font-size: clamp(40px,7vw,88px);
+  font-weight:900; line-height:0.95; letter-spacing:-1px;
+  color: var(--text-main);
+}
+.t-hero em { font-style:italic; color:var(--gold-bright); display:block; }
+
+.t-title {
+  font-family:'Playfair Display',serif;
+  font-size: clamp(24px,4vw,58px);
+  font-weight:700; line-height:1.1;
+  color: var(--text-main);
+}
+.t-title em { font-style:italic; color:var(--gold-bright); }
+
+.t-subtitle {
+  font-family:'Playfair Display',serif;
+  font-size: clamp(15px,2vw,24px);
+  font-weight:400; font-style:italic;
+  color: var(--text-muted); line-height:1.5;
+}
+
+.t-body {
+  font-size: clamp(13px,1.4vw,17px);
+  font-weight:300; color:var(--text-muted);
+  line-height:1.8; max-width:640px;
+}
+.t-body strong { color:var(--text-main); font-weight:500; }
+
+.t-scripture {
+  font-family:'Playfair Display',serif;
+  font-size: clamp(14px,1.7vw,20px);
+  font-style:italic; font-weight:400;
+  color:var(--gold-bright); line-height:1.7;
+  max-width:680px; text-align:center;
+}
+
+.t-ref {
+  font-size:10px; letter-spacing:2px;
+  text-transform:uppercase;
+  color:var(--gold); font-weight:600;
+  margin-top:10px; display:block; text-align:center;
+}
+
+.facilitator {
+  font-family:'Playfair Display',serif;
+  font-size: clamp(16px,2.1vw,23px);
+  font-style:normal; font-weight:400;
+  color: var(--facilitator-color);
+  margin-top:10px; text-align:center;
+  letter-spacing:0.3px;
+}
+
+.kw { color:var(--gold-bright); font-weight:500; }
+
+/* ============================================================
+   COMPONENTS
+   ============================================================ */
+.section-badge {
+  display:inline-flex; align-items:center; gap:8px;
+  background:var(--badge-bg);
+  border:1px solid var(--gold-border);
+  border-radius:4px; padding:4px 12px;
+  font-size:clamp(9px,1.2vw,11px); letter-spacing:2px;
+  text-transform:uppercase; color:var(--gold);
+  font-weight:600; margin-bottom:18px;
+}
+
+.scripture-block {
+  background:var(--scripture-bg);
+  border:1px solid var(--gold-border);
+  border-left:3px solid var(--gold);
+  border-radius:0 4px 4px 0;
+  padding:20px 24px;
+  max-width:700px; width:100%; margin:0 auto;
+}
+
+/* cards */
+.card {
+  background:var(--card-bg);
+  border:1px solid var(--gold-border);
+  border-radius:4px; padding:18px 20px;
+  transition:border-color 0.3s, box-shadow 0.3s;
+  box-shadow: var(--shadow);
+}
+.card:hover { border-color:rgba(212,168,67,0.5); }
+.card-icon { font-size:24px; margin-bottom:10px; display:block; }
+.card h3 {
+  font-family:'Playfair Display',serif;
+  font-size:clamp(14px,1.5vw,18px);
+  font-weight:700; color:var(--text-main);
+  margin-bottom:6px; line-height:1.2;
+}
+.card p { font-size:clamp(11px,1.1vw,13.5px); color:var(--text-muted); line-height:1.7; font-weight:300; }
+.card .card-ref { font-size:9px; letter-spacing:1.5px; text-transform:uppercase; color:var(--gold); font-weight:600; margin-top:10px; display:block; opacity:0.75; }
+.card.gold-accent { border-top:3px solid var(--gold); }
+.card.olive-accent { border-top:3px solid var(--olive); }
+.card.rust-accent  { border-top:3px solid var(--rust); }
+
+/* anchor quote */
+.anchor-quote {
+  font-family:'Playfair Display',serif;
+  font-size:clamp(18px,2.8vw,32px);
+  font-style:italic; font-weight:400;
+  color:var(--text-main); text-align:center;
+  max-width:720px; line-height:1.5;
+}
+.anchor-quote em { color:var(--gold-bright); font-style:normal; }
+
+/* ============================================================
+   GRID LAYOUTS
+   ============================================================ */
+.grid-2 {
+  display:grid; grid-template-columns:1fr 1fr;
+  gap:16px; width:100%; max-width:860px; padding:0 24px;
+}
+.grid-3 {
+  display:grid; grid-template-columns:1fr 1fr 1fr;
+  gap:14px; width:100%; max-width:940px; padding:0 24px;
+}
+.grid-4 {
+  display:grid; grid-template-columns:1fr 1fr;
+  gap:12px; width:100%; max-width:820px; padding:0 24px;
+}
+
+@media (max-width:700px) {
+  .grid-2 { grid-template-columns:1fr; gap:10px; }
+  .grid-3 { grid-template-columns:1fr 1fr; gap:10px; }
+  .grid-4 { grid-template-columns:1fr 1fr; gap:8px; }
+}
+@media (max-width:480px) {
+  .grid-3 { grid-template-columns:1fr; }
+  .grid-4 { grid-template-columns:1fr; }
+}
+
+/* ============================================================
+   SPLIT LAYOUT
+   ============================================================ */
+.split {
+  display:grid; grid-template-columns:1fr 1fr;
+  width:100%; height:100%;
+  padding-bottom:110px;
+}
+.split-left {
+  display:flex; flex-direction:column; justify-content:center;
+  padding:40px 36px 40px 48px;
+  border-right:1px solid var(--split-border);
+}
+.split-right {
+  display:flex; flex-direction:column; justify-content:center;
+  padding:40px 48px 40px 36px;
+}
+
+@media (max-width:700px) {
+  .split { grid-template-columns:1fr; overflow-y:auto; padding-bottom:120px; }
+  .split-left { border-right:none; border-bottom:1px solid var(--split-border); padding:28px 20px 20px; }
+  .split-right { padding:20px 20px 28px; }
+}
+
+/* ============================================================
+   PRINCIPLES
+   ============================================================ */
+.principle {
+  display:flex; gap:16px; align-items:flex-start;
+  padding:16px 0;
+  border-bottom:1px solid var(--principle-border);
+}
+.principle:last-child { border-bottom:none; }
+.principle-num {
+  font-family:'Playfair Display',serif;
+  font-size:36px; font-weight:900;
+  color:var(--gold); opacity:0.3;
+  line-height:1; flex-shrink:0; width:44px;
+}
+.principle-content h4 {
+  font-family:'Playfair Display',serif;
+  font-size:clamp(14px,1.6vw,18px);
+  font-weight:700; color:var(--text-main); margin-bottom:4px;
+}
+.principle-content p {
+  font-size:clamp(11px,1.2vw,13.5px);
+  color:var(--text-muted); line-height:1.65; font-weight:300;
+}
+.principle-content .ref {
+  font-size:9px; letter-spacing:1.5px; text-transform:uppercase;
+  color:var(--gold); font-weight:600; margin-top:5px; display:block; opacity:0.75;
+}
+
+/* ============================================================
+   TABLE
+   ============================================================ */
+.table-wrap {
+  width:100%; max-width:820px;
+  border:1px solid var(--gold-border);
+  border-radius:4px; overflow:hidden;
+  box-shadow: var(--shadow);
+}
+.table-wrap table { width:100%; border-collapse:collapse; }
+.table-wrap th {
+  background:var(--table-header-bg);
+  font-size:clamp(9px,1.1vw,10px); letter-spacing:2px;
+  text-transform:uppercase; color:var(--gold); font-weight:600;
+  font-family:'Outfit',sans-serif; padding:12px 16px;
+  text-align:left; border-bottom:1px solid var(--gold-border);
+}
+.table-wrap td {
+  padding:12px 16px;
+  font-size:clamp(11px,1.2vw,14px);
+  color:var(--text-muted);
+  border-bottom:1px solid var(--table-border);
+  font-weight:300; line-height:1.45;
+}
+.table-wrap td:first-child {
+  color:var(--text-main); font-weight:500;
+  font-family:'Playfair Display',serif;
+  font-size:clamp(12px,1.3vw,15px);
+}
+.table-wrap tr:last-child td { border-bottom:none; }
+.table-wrap tr:hover td { background:var(--table-row-hover); }
+
+/* ============================================================
+   FINAL GRID
+   ============================================================ */
+.final-grid {
+  display:grid; grid-template-columns:1fr 1fr;
+  gap:10px; max-width:640px; width:100%;
+  padding:0 24px; margin-top:24px;
+}
+.final-card {
+  background:var(--gold-dim);
+  border:1px solid var(--gold-border);
+  border-radius:4px; padding:14px 16px;
+}
+.final-card .fc-label {
+  font-size:9px; letter-spacing:2px;
+  text-transform:uppercase; color:var(--gold);
+  font-weight:600; margin-bottom:5px;
+}
+.final-card p { font-size:clamp(11px,1.2vw,13px); color:var(--text-muted); line-height:1.6; font-weight:300; }
+
+@media (max-width:480px) {
+  .final-grid { grid-template-columns:1fr; }
+}
+
+/* ============================================================
+   SLIDE CONTENT WRAPPER
+   ============================================================ */
+.slide-content {
+  display:flex; flex-direction:column;
+  align-items:center; text-align:center;
+  padding:24px 24px 0;
+  gap:16px; width:100%; max-width:100%;
+}
+.slide-content.left-align {
+  align-items:flex-start; text-align:left;
+  padding:40px 60px 0;
+}
+.wide { max-width:860px; padding:0 24px; }
+
+/* ============================================================
+   BOTTOM CHROME: DOTS + NAV + CONTROLS
+   ============================================================ */
+.bottom-chrome {
+  position:fixed; bottom:0; left:0; right:0;
+  z-index:200;
+  display:flex; flex-direction:column;
+  align-items:center;
+  padding-bottom:env(safe-area-inset-bottom, 8px);
+}
+
+/* Dots row */
+.dots-row {
+  display:flex; align-items:center; justify-content:center;
+  gap:6px; padding:6px 16px;
+  flex-wrap:wrap; max-width:100vw;
+}
+.dot {
+  width:7px; height:7px; border-radius:50%;
+  background:var(--text-dim); cursor:pointer;
+  transition:all 0.3s; flex-shrink:0;
+  border:1px solid transparent;
+}
+.dot.active {
+  background:var(--gold); transform:scale(1.35);
+  border-color:var(--gold-border);
+}
+.dot:hover { background:var(--gold-bright); }
+
+/* Nav + controls row */
+.nav-row {
+  display:flex; align-items:center; justify-content:center;
+  gap:8px; padding:0 16px 10px;
+  flex-wrap:wrap;
+}
+
+.nav-pill {
+  display:flex; align-items:center; gap:12px;
+  background:var(--nav-bg);
+  border:1px solid var(--nav-border);
+  border-radius:50px; padding:8px 18px;
+  backdrop-filter:blur(12px);
+  box-shadow: var(--shadow);
+}
+
+.ctrl-pill {
+  display:flex; align-items:center; gap:4px;
+  background:var(--nav-bg);
+  border:1px solid var(--nav-border);
+  border-radius:50px; padding:8px 14px;
+  backdrop-filter:blur(12px);
+  box-shadow: var(--shadow);
+}
+
+.nav-btn {
+  background:none; border:none;
+  color:var(--text-muted);
+  font-family:'Outfit',sans-serif;
+  font-size:11px; letter-spacing:1.5px;
+  text-transform:uppercase; font-weight:600;
+  cursor:pointer; padding:5px 12px;
+  border-radius:20px;
+  transition:all 0.2s;
+  display:flex; align-items:center; gap:6px;
+}
+.nav-btn:hover { color:var(--gold-bright); background:var(--gold-dim); }
+.nav-btn svg { width:13px; height:13px; fill:none; stroke:currentColor; stroke-width:2.5; stroke-linecap:round; stroke-linejoin:round; }
+
+.slide-counter {
+  font-size:10px; letter-spacing:2px;
+  color:var(--text-dim); font-weight:500;
+  min-width:48px; text-align:center;
+}
+
+/* icon buttons */
+.icon-btn {
+  background:none; border:none;
+  color:var(--text-muted);
+  cursor:pointer; padding:5px 8px;
+  border-radius:20px;
+  transition:all 0.2s;
+  font-size:14px; line-height:1;
+  display:flex; align-items:center; justify-content:center;
+}
+.icon-btn:hover { color:var(--gold-bright); background:var(--gold-dim); }
+.icon-btn.active-btn { color:var(--gold-bright); }
+
+/* ============================================================
+   TOP BADGES
+   ============================================================ */
+.title-badge {
+  position:fixed; top:12px; left:16px;
+  z-index:200;
+  display:flex; flex-direction:column; gap:3px;
+}
+.title-badge-main {
+  font-size:9px; letter-spacing:2px;
+  text-transform:uppercase; color:var(--gold);
+  font-weight:600; opacity:0.65;
+  line-height:1;
+}
+.title-badge-name {
+  font-family:'Outfit', sans-serif;
+  font-size:9px; letter-spacing:2px;
+  text-transform:uppercase; font-weight:600;
+  color:var(--facilitator-color);
+  opacity:0;
+  transition: opacity 0.5s;
+  line-height:1;
+}
+.title-badge-name.visible { opacity:0.85; }
+
+.key-hint {
+  position:fixed; top:14px; right:16px;
+  font-size:9px; letter-spacing:1.5px;
+  text-transform:uppercase; color:var(--text-dim);
+  font-weight:500; z-index:200;
+}
+@media (max-width:600px) { .key-hint { display:none; } }
+
+
+/* ============================================================
+   EDITOR MODAL
+   ============================================================ */
+.editor-overlay {
+  display:none;
+  position:fixed; inset:0;
+  background:var(--editor-overlay);
+  z-index:500;
+  align-items:center; justify-content:center;
+  padding:16px;
+}
+.editor-overlay.open { display:flex; }
+
+.editor-modal {
+  background:var(--editor-bg);
+  color:var(--editor-text);
+  border:1px solid var(--editor-border);
+  border-radius:8px;
+  width:100%; max-width:680px;
+  max-height:88vh;
+  display:flex; flex-direction:column;
+  box-shadow:0 24px 60px rgba(0,0,0,0.35);
+  overflow:hidden;
+}
+
+.editor-header {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:16px 20px;
+  border-bottom:1px solid var(--editor-border);
+  flex-shrink:0;
+}
+.editor-header h3 {
+  font-family:'Playfair Display',serif;
+  font-size:18px; font-weight:700;
+  color:var(--gold);
+}
+.editor-header span {
+  font-size:10px; letter-spacing:1.5px;
+  text-transform:uppercase; color:var(--text-muted);
+  font-weight:500; margin-top:2px; display:block;
+}
+
+.editor-close {
+  background:none; border:none;
+  font-size:20px; cursor:pointer;
+  color:var(--text-muted); padding:4px 8px;
+  border-radius:4px; transition:all 0.2s;
+  line-height:1;
+}
+.editor-close:hover { color:var(--rust); background:rgba(155,74,48,0.1); }
+
+.editor-nav {
+  display:flex; align-items:center; gap:8px;
+  padding:12px 20px;
+  border-bottom:1px solid var(--editor-border);
+  flex-shrink:0; flex-wrap:wrap;
+}
+
+.editor-slide-label {
+  font-size:11px; letter-spacing:1.5px;
+  text-transform:uppercase; color:var(--text-muted);
+  font-weight:600; margin-right:4px;
+}
+
+.editor-slide-btn {
+  background:none; border:1px solid var(--editor-border);
+  color:var(--text-muted); font-size:11px;
+  font-weight:600; cursor:pointer;
+  padding:4px 10px; border-radius:4px;
+  transition:all 0.2s; font-family:'Outfit',sans-serif;
+}
+.editor-slide-btn:hover { border-color:var(--gold); color:var(--gold); }
+.editor-slide-btn.active { background:var(--gold); color:#000; border-color:var(--gold); }
+
+.editor-body {
+  flex:1; overflow-y:auto; padding:16px 20px;
+  display:flex; flex-direction:column; gap:14px;
+}
+
+.editor-field label {
+  display:block; font-size:10px;
+  letter-spacing:1.5px; text-transform:uppercase;
+  color:var(--gold); font-weight:600; margin-bottom:5px;
+}
+.editor-field input,
+.editor-field textarea {
+  width:100%; background:var(--card-bg);
+  border:1px solid var(--editor-border);
+  border-radius:4px; padding:10px 12px;
+  color:var(--editor-text); font-family:'Outfit',sans-serif;
+  font-size:13px; font-weight:300; line-height:1.6;
+  resize:vertical; transition:border-color 0.2s;
+  outline:none;
+}
+.editor-field input:focus,
+.editor-field textarea:focus { border-color:var(--gold); }
+.editor-field textarea { min-height:80px; }
+
+.editor-footer {
+  display:flex; justify-content:flex-end; gap:10px;
+  padding:12px 20px;
+  border-top:1px solid var(--editor-border);
+  flex-shrink:0;
+}
+
+.editor-btn {
+  font-family:'Outfit',sans-serif;
+  font-size:11px; letter-spacing:1.5px;
+  text-transform:uppercase; font-weight:600;
+  padding:8px 18px; border-radius:20px;
+  cursor:pointer; border:1px solid;
+  transition:all 0.2s;
+}
+.editor-btn.primary {
+  background:var(--gold); color:#000;
+  border-color:var(--gold);
+}
+.editor-btn.primary:hover { background:var(--gold-bright); }
+.editor-btn.secondary {
+  background:none; color:var(--text-muted);
+  border-color:var(--editor-border);
+}
+.editor-btn.secondary:hover { color:var(--text-main); border-color:var(--text-muted); }
+
+/* ============================================================
+   ANIMATIONS
+   ============================================================ */
+.slide.active .slide-content > *,
+.slide.active .split-left > *,
+.slide.active .split-right > *,
+.slide.active .grid-2 > *,
+.slide.active .grid-3 > *,
+.slide.active .grid-4 > * {
+  animation: fadeUp 0.55s ease both;
+}
+.slide.active .slide-content > *:nth-child(1) { animation-delay:0.08s; }
+.slide.active .slide-content > *:nth-child(2) { animation-delay:0.18s; }
+.slide.active .slide-content > *:nth-child(3) { animation-delay:0.28s; }
+.slide.active .slide-content > *:nth-child(4) { animation-delay:0.38s; }
+.slide.active .slide-content > *:nth-child(5) { animation-delay:0.48s; }
+.slide.active .grid-2 > *:nth-child(1) { animation-delay:0.18s; }
+.slide.active .grid-2 > *:nth-child(2) { animation-delay:0.30s; }
+.slide.active .grid-3 > *:nth-child(1) { animation-delay:0.15s; }
+.slide.active .grid-3 > *:nth-child(2) { animation-delay:0.26s; }
+.slide.active .grid-3 > *:nth-child(3) { animation-delay:0.37s; }
+.slide.active .grid-4 > *:nth-child(1) { animation-delay:0.12s; }
+.slide.active .grid-4 > *:nth-child(2) { animation-delay:0.22s; }
+.slide.active .grid-4 > *:nth-child(3) { animation-delay:0.32s; }
+.slide.active .grid-4 > *:nth-child(4) { animation-delay:0.42s; }
+.slide.active .principle:nth-child(1) { animation:fadeUp 0.5s 0.12s ease both; }
+.slide.active .principle:nth-child(2) { animation:fadeUp 0.5s 0.24s ease both; }
+.slide.active .principle:nth-child(3) { animation:fadeUp 0.5s 0.36s ease both; }
+
+@keyframes fadeUp {
+  from { opacity:0; transform:translateY(18px); }
+  to   { opacity:1; transform:translateY(0); }
+}
+
+/* mobile padding adjustments */
+@media (max-width:600px) {
+  .slide { padding-bottom:130px; }
+  .t-hero { font-size:clamp(36px,11vw,60px); }
+  .t-title { font-size:clamp(20px,6vw,36px); }
+  .slide-content { padding:16px 16px 0; gap:12px; }
+  .slide-content.left-align { padding:24px 20px 0; }
+  .principle-num { font-size:28px; width:34px; }
+}
+</style>
+</head>
+<body>
+
+<div class="title-badge" id="titleBadge">
+  <span class="title-badge-main" id="badgeTitle">Don't Come Empty</span>
+  <span class="title-badge-name" id="badgeName">Facilitated by Antone Holmes</span>
+</div>
+<div class="key-hint">← → Keys · Swipe</div>
+
+<!-- ============================================================
+     SLIDES
+     ============================================================ -->
+<div class="deck" id="deck">
+
+  <!-- SLIDE 1: TITLE -->
+  <div class="slide bg-dark active" id="slide-0">
+    <div class="glow-top"></div>
+    <div class="glow-bottom-left"></div>
+    <div class="slide-content">
+      <div class="overline" data-editable="s0-overline">Spring Feast Series · Giving Teaching</div>
+      <div class="t-hero" data-editable="s0-hero">Don't Come<br><em>Empty</em></div>
+      <div class="deco-line"></div>
+      <p class="t-subtitle" data-editable="s0-subtitle">First Fruits, Feast Giving,<br>and the Contemporary Offering</p>
+      <p class="facilitator" data-editable="s0-facilitator">Facilitated by Antone Holmes</p>
+      <span class="t-ref" data-editable="s0-ref">Exodus 23:15 · Deuteronomy 16:16–17 · Proverbs 3:9–10</span>
+    </div>
+  </div>
+
+  <!-- SLIDE 2: THE COMMAND -->
+  <div class="slide bg-mid" id="slide-1">
+    <div class="glow-center"></div>
+    <div class="slide-content">
+      <div class="section-badge" data-editable="s1-badge">The Foundation</div>
+      <p class="t-title" data-editable="s1-title">The Command That<br><em>Never Changed</em></p>
+      <div class="scripture-block">
+        <p class="t-scripture" style="text-align:left;" data-editable="s1-scripture">"Three times a year all your males shall appear before the LORD your God at the place that he will choose... They shall not appear before the LORD empty-handed. Every man shall give as he is able, according to the blessing of the LORD your God that he has given you."</p>
+        <span class="t-ref" style="text-align:left;margin-top:12px;" data-editable="s1-ref">Deuteronomy 16:16–17</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 3: THREE LOCKS -->
+  <div class="slide bg-dark" id="slide-2">
+    <div class="glow-top"></div>
+    <div class="slide-content">
+      <div class="section-badge" data-editable="s2-badge">Deuteronomy 16:16–17</div>
+      <p class="t-title" data-editable="s2-title">Three Things <em>Locked</em><br>in One Verse</p>
+    </div>
+    <div class="grid-3" style="position:relative;z-index:2;margin-top:6px;">
+      <div class="card gold-accent">
+        <span class="card-icon">👁️</span>
+        <h3 data-editable="s2-c1h">Appearance Was Required</h3>
+        <p data-editable="s2-c1p">You had to show up. Presence before God at the appointed time was not optional — it was covenantal obligation.</p>
+        <span class="card-ref" data-editable="s2-c1r">Deut. 16:16</span>
+      </div>
+      <div class="card gold-accent">
+        <span class="card-icon">🤲</span>
+        <h3 data-editable="s2-c2h">Empty Hands Were Prohibited</h3>
+        <p data-editable="s2-c2p">Presence without an offering was incomplete. Showing up without bringing something was a relational statement — and not a good one.</p>
+        <span class="card-ref" data-editable="s2-c2r">Exodus 23:15 · Exodus 34:20</span>
+      </div>
+      <div class="card gold-accent">
+        <span class="card-icon">⚖️</span>
+        <h3 data-editable="s2-c3h">The Measure Was Proportional</h3>
+        <p data-editable="s2-c3p">"As he is able, according to the blessing." Not a flat tax. A response to what God had already done in your life.</p>
+        <span class="card-ref" data-editable="s2-c3r">Deut. 16:17 · Luke 21:1–4</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 4: FIRST FRUITS -->
+  <div class="slide bg-warm" id="slide-3">
+    <div class="glow-center"></div>
+    <div class="split">
+      <div class="split-left">
+        <div class="section-badge" data-editable="s3-badge">Deuteronomy 26:1–11</div>
+        <p class="t-title" style="text-align:left;" data-editable="s3-title">The First Fruits<br><em>Offering</em></p>
+        <div style="margin:14px 0;"><div class="deco-line" style="margin:0;"></div></div>
+        <p class="t-body" style="text-align:left;" data-editable="s3-body1">The most theologically loaded gift in all of Scripture. The worshiper came, placed the basket before the priest, and then <strong>spoke</strong> — reciting the entire story of God's redemption before making the offering.</p>
+        <p class="t-body" style="margin-top:10px;text-align:left;" data-editable="s3-body2">You couldn't drop the offering silently. <strong>Testimony preceded the gift.</strong> Giving was inseparable from declaration.</p>
+        <span class="t-ref" style="text-align:left;margin-top:14px;" data-editable="s3-ref">Deuteronomy 26:10–11</span>
+      </div>
+      <div class="split-right">
+        <div class="principle">
+          <div class="principle-num">1</div>
+          <div class="principle-content">
+            <h4 data-editable="s3-p1h">God Owns the Source</h4>
+            <p data-editable="s3-p1p">The first of the ground was His because the ground was His. Giving first acknowledges that everything came from Him — not from your skill or effort alone.</p>
+            <span class="ref" data-editable="s3-p1r">Psalm 24:1 · Deut. 8:17–18</span>
+          </div>
+        </div>
+        <div class="principle">
+          <div class="principle-num">2</div>
+          <div class="principle-content">
+            <h4 data-editable="s3-p2h">Offered Before the Full Harvest</h4>
+            <p data-editable="s3-p2p">You gave before you knew the total. Only the first signs of harvest were visible. This was an act of faith, not accounting.</p>
+            <span class="ref" data-editable="s3-p2r">Proverbs 3:9–10 · 2 Cor. 9:6</span>
+          </div>
+        </div>
+        <div class="principle">
+          <div class="principle-num">3</div>
+          <div class="principle-content">
+            <h4 data-editable="s3-p3h">Joy Was the Required Posture</h4>
+            <p data-editable="s3-p3p">Not reluctant duty. Not religious tax. A celebration of abundance already experienced and abundance still expected.</p>
+            <span class="ref" data-editable="s3-p3r">Deut. 26:11 · 2 Cor. 9:7</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 5: AUTHORIZED CONVERSION -->
+  <div class="slide bg-dark" id="slide-4">
+    <div class="glow-top"></div>
+    <div class="slide-content">
+      <div class="section-badge" data-editable="s4-badge">Deuteronomy 14:22–26</div>
+      <p class="t-title" data-editable="s4-title">God Authorized<br>the <em>Conversion</em></p>
+      <div class="scripture-block">
+        <p class="t-scripture" style="text-align:left;font-size:clamp(13px,1.5vw,18px);" data-editable="s4-scripture">"If the way is too long for you, so that you are not able to carry the tithe... then you shall turn it into <strong style="color:var(--gold-bright);font-style:normal;">money</strong> and bind up the money in your hand and go to the place that the LORD your God chooses... And you shall eat there before the LORD your God and <strong style="color:var(--gold-bright);font-style:normal;">rejoice</strong>, you and your household."</p>
+        <span class="t-ref" style="text-align:left;" data-editable="s4-ref">Deuteronomy 14:24–26</span>
+      </div>
+      <p class="t-body" style="text-align:center;margin-top:6px;" data-editable="s4-body">The principle of <span class="kw">money as a substitute for goods</span> is not a modern compromise — it is <strong>embedded in Torah.</strong> The tithe was always about the heart behind the transfer, not the specific commodity.</p>
+    </div>
+  </div>
+
+  <!-- SLIDE 6: BARLEY TO BANK -->
+  <div class="slide bg-mid" id="slide-5">
+    <div class="glow-center"></div>
+    <div class="slide-content">
+      <div class="section-badge" data-editable="s5-badge">Contemporary Application</div>
+      <p class="t-title" data-editable="s5-title">From <em>Barley</em><br>to Bank Transfers</p>
+    </div>
+    <div class="grid-2" style="position:relative;z-index:2;margin-top:6px;">
+      <div class="card olive-accent">
+        <h3 data-editable="s5-c1h">Then: Agrarian Economy</h3>
+        <p data-editable="s5-c1p">Wealth was measured in grain, oil, wine, livestock, and land. The firstfruits offering was the <strong>first and best of your productive capacity</strong> in the form your livelihood took.</p>
+        <span class="card-ref" data-editable="s5-c1r">Deut. 26:2 · Nehemiah 10:35–37</span>
+      </div>
+      <div class="card gold-accent">
+        <h3 data-editable="s5-c2h">Now: Contemporary Economy</h3>
+        <p data-editable="s5-c2p">Wealth is measured in salary, business revenue, investments, and digital assets. Your firstfruits is still the <strong>first and best of your productive capacity</strong> — in the form your livelihood currently takes.</p>
+        <span class="card-ref" data-editable="s5-c2r">Proverbs 3:9 · Malachi 3:10</span>
+      </div>
+    </div>
+    <div style="position:relative;z-index:2;max-width:680px;text-align:center;margin-top:14px;padding:0 24px;">
+      <p class="t-body" style="text-align:center;" data-editable="s5-body">A software engineer's firstfruits is not a basket of barley. <strong>Money is compressed life</strong> — the stored representation of your time, skill, and labor. When you bring it as an offering, you are bringing yourself.</p>
+    </div>
+  </div>
+
+  <!-- SLIDE 7: PROVERBS -->
+  <div class="slide bg-dark" id="slide-6">
+    <div class="glow-top"></div>
+    <div class="glow-bottom-left"></div>
+    <div class="slide-content">
+      <div class="section-badge" data-editable="s6-badge">Proverbs 3:9–10</div>
+      <div class="anchor-quote" data-editable="s6-quote">
+        "Honor the LORD with your <em>wealth</em> and with the firstfruits of all your produce; then your barns will be filled with plenty."
+      </div>
+      <div class="deco-line" style="margin-top:6px;"></div>
+      <p class="t-body" style="text-align:center;margin-top:4px;" data-editable="s6-body">The Hebrew word <span class="kw">hon (הוֹן)</span> — translated "wealth" — is a broad term for substance in whatever form it takes. Solomon used it intentionally. <strong>Honor God with your substance, regardless of its form.</strong></p>
+      <span class="t-ref" data-editable="s6-ref">Proverbs 3:9 · 1 Chronicles 29:14</span>
+    </div>
+  </div>
+
+  <!-- SLIDE 8: COVENANT LANGUAGE -->
+  <div class="slide bg-warm" id="slide-7">
+    <div class="glow-center"></div>
+    <div class="slide-content">
+      <div class="section-badge" data-editable="s7-badge">The Relational Heart</div>
+      <p class="t-title" data-editable="s7-title">Giving as<br><em>Covenant Language</em></p>
+      <p class="t-body" style="text-align:center;" data-editable="s7-body">In the ancient Near East, tribute was the language of covenant relationship. When a vassal brought tribute to a king, it declared: <span class="kw">"You are my source. I am in relationship with you. I trust your protection and provision."</span></p>
+    </div>
+    <div class="grid-2" style="position:relative;z-index:2;margin-top:6px;">
+      <div class="card rust-accent">
+        <span class="card-icon">✋</span>
+        <h3 data-editable="s7-c1h">What Empty Hands Declared</h3>
+        <p data-editable="s7-c1p">Showing up empty-handed was not just a rule violation. It was a <strong>relational statement</strong>: "I don't need you. I can manage this myself. My hands are sufficient."</p>
+        <span class="card-ref" data-editable="s7-c1r">Exodus 23:15 · Malachi 3:8</span>
+      </div>
+      <div class="card gold-accent">
+        <span class="card-icon">🤝</span>
+        <h3 data-editable="s7-c2h">What an Offering Declared</h3>
+        <p data-editable="s7-c2p">Every offering was a declaration of <strong>allegiance and trust</strong>. It said: "You are my source. What I have came from You. I am returning the first of what You gave me."</p>
+        <span class="card-ref" data-editable="s7-c2r">Deut. 26:10 · 1 Chron. 29:14</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 9: MALACHI -->
+  <div class="slide bg-dark" id="slide-8">
+    <div class="glow-top"></div>
+    <div class="slide-content">
+      <div class="section-badge" data-editable="s8-badge">Malachi 3:8–10</div>
+      <p class="t-title" data-editable="s8-title">A Covenant <em>Breach</em>,<br>Not Just a Financial Shortfall</p>
+      <div class="scripture-block">
+        <p class="t-scripture" style="text-align:left;font-size:clamp(12px,1.4vw,17px);" data-editable="s8-scripture">"Will man rob God? Yet you are robbing me... Bring the full tithe into the storehouse, that there may be food in my house. And thereby <strong style="color:var(--gold-bright);font-style:normal;">put me to the test</strong>, says the LORD of hosts, if I will not open the windows of heaven for you and pour down for you a blessing until there is no more need."</p>
+        <span class="t-ref" style="text-align:left;" data-editable="s8-ref">Malachi 3:8–10</span>
+      </div>
+      <p class="t-body" style="text-align:center;margin-top:6px;" data-editable="s8-body">The language is relational — <strong>robbery implies betrayal of trust.</strong> And the remedy God offers is not compliance — it is an invitation to <span class="kw">test the relationship</span>: "Try me. See if I don't show up for you."</p>
+    </div>
+  </div>
+
+  <!-- SLIDE 10: WIDOW -->
+  <div class="slide bg-mid" id="slide-9">
+    <div class="glow-center"></div>
+    <div class="split">
+      <div class="split-left">
+        <div class="section-badge" data-editable="s9-badge">Luke 21:1–4</div>
+        <p class="t-title" style="text-align:left;" data-editable="s9-title">Proportion<br>Over <em>Amount</em></p>
+        <div style="margin:14px 0;"><div class="deco-line" style="margin:0;"></div></div>
+        <div class="scripture-block" style="margin-top:0;">
+          <p class="t-scripture" style="text-align:left;font-size:clamp(12px,1.3vw,16px);" data-editable="s9-scripture">"This poor widow has put in more than all of them. For they all contributed out of their abundance, but she out of her poverty put in all she had to live on."</p>
+          <span class="t-ref" style="text-align:left;margin-top:10px;" data-editable="s9-ref">Luke 21:3–4</span>
+        </div>
+      </div>
+      <div class="split-right">
+        <p class="t-subtitle" style="text-align:left;margin-bottom:20px;" data-editable="s9-subtitle">What Jesus was measuring</p>
+        <div class="principle">
+          <div class="principle-num">✓</div>
+          <div class="principle-content">
+            <h4 data-editable="s9-p1h">The Proportion</h4>
+            <p data-editable="s9-p1p">She gave what cost her something. Deuteronomy 16:17 established this — "as he is able, according to the blessing." Jesus affirms it in real time.</p>
+            <span class="ref" data-editable="s9-p1r">Deut. 16:17 · 2 Cor. 8:12</span>
+          </div>
+        </div>
+        <div class="principle">
+          <div class="principle-num">✓</div>
+          <div class="principle-content">
+            <h4 data-editable="s9-p2h">The Posture</h4>
+            <p data-editable="s9-p2p">The wealthy gave what cost them nothing. She gave everything. God is not looking at the amount — He is looking at what the gift represents relative to what He has given you.</p>
+            <span class="ref" data-editable="s9-p2r">2 Cor. 9:7 · Mark 12:41–44</span>
+          </div>
+        </div>
+        <div class="principle">
+          <div class="principle-num">✓</div>
+          <div class="principle-content">
+            <h4 data-editable="s9-p3h">The Trust</h4>
+            <p data-editable="s9-p3p">Giving what you cannot afford is only possible if you trust the source. Her offering was a declaration of faith, not poverty.</p>
+            <span class="ref" data-editable="s9-p3r">Philippians 4:19 · Luke 21:4</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 11: SOWING & REAPING -->
+  <div class="slide bg-dark" id="slide-10">
+    <div class="glow-top"></div>
+    <div class="slide-content">
+      <div class="section-badge" data-editable="s10-badge">The Harvest Connection</div>
+      <p class="t-title" data-editable="s10-title">You Are Not Paying a Bill —<br>You Are <em>Planting Seed</em></p>
+    </div>
+    <div class="grid-3" style="position:relative;z-index:2;margin-top:6px;">
+      <div class="card olive-accent">
+        <span class="card-icon">🌱</span>
+        <h3 data-editable="s10-c1h">Sow Bountifully, Reap Bountifully</h3>
+        <p data-editable="s10-c1p">Paul frames financial giving in agricultural terms — you are deciding how much seed to plant. The feast season is <strong>planting season.</strong></p>
+        <span class="card-ref" data-editable="s10-c1r">2 Corinthians 9:6–7</span>
+      </div>
+      <div class="card gold-accent">
+        <span class="card-icon">☀️</span>
+        <h3 data-editable="s10-c2h">Do Not Grow Weary</h3>
+        <p data-editable="s10-c2p">The growing season between the spring and fall feasts will test your resolve. What you sow in spring, you will reap in fall — <strong>if you do not give up.</strong></p>
+        <span class="card-ref" data-editable="s10-c2r">Galatians 6:9</span>
+      </div>
+      <div class="card rust-accent">
+        <span class="card-icon">🌾</span>
+        <h3 data-editable="s10-c3h">God Multiplies the Seed</h3>
+        <p data-editable="s10-c3p">He who supplies seed to the sower will supply and multiply your seed. You are never the one who produces the harvest — <strong>He is.</strong></p>
+        <span class="card-ref" data-editable="s10-c3r">2 Corinthians 9:10 · Luke 6:38</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 12: TABLE -->
+  <div class="slide bg-mid" id="slide-11">
+    <div class="glow-center"></div>
+    <div class="slide-content">
+      <div class="section-badge">Scripture Reference</div>
+      <p class="t-title" style="margin-bottom:14px;">Every <em>Key Text</em> at a Glance</p>
+    </div>
+    <div class="table-wrap wide" style="position:relative;z-index:2;">
+      <table>
+        <thead><tr><th>Principle</th><th>Key Scriptures</th></tr></thead>
+        <tbody>
+          <tr><td>Command to appear with an offering</td><td>Exodus 23:15 · Exodus 34:20 · Deut. 16:16–17</td></tr>
+          <tr><td>First Fruits giving liturgy</td><td>Deuteronomy 26:1–11 · Leviticus 23:9–14</td></tr>
+          <tr><td>God authorized money as the substitute</td><td>Deuteronomy 14:22–26</td></tr>
+          <tr><td>Honor God with wealth (not just crops)</td><td>Proverbs 3:9–10 · 1 Chronicles 29:14</td></tr>
+          <tr><td>Giving as covenant relationship</td><td>Malachi 3:8–10 · Deut. 26:10</td></tr>
+          <tr><td>Proportion over amount</td><td>Luke 21:1–4 · Deuteronomy 16:17 · 2 Cor. 8:12</td></tr>
+          <tr><td>Sowing and reaping framework</td><td>2 Corinthians 9:6–10 · Galatians 6:7–9</td></tr>
+          <tr><td>God multiplies the seed</td><td>2 Corinthians 9:10 · Luke 6:38 · Proverbs 11:24</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- SLIDE 13: CLOSING -->
+  <div class="slide bg-dark" id="slide-12">
+    <div class="glow-top"></div>
+    <div class="glow-bottom-left"></div>
+    <div class="slide-content">
+      <div class="overline" data-editable="s12-overline">Closing Charge</div>
+      <div class="anchor-quote" data-editable="s12-quote">
+        "You are here.<br>You showed up.<br>That matters.<br><em>But what did you bring with you?"</em>
+      </div>
+      <div class="deco-line" style="margin-top:10px;"></div>
+      <p class="t-body" style="text-align:center;margin-top:6px;" data-editable="s12-body">Not to produce guilt — but to produce reflection. What your hands carry when you appear before God is a statement about what you believe about Him.</p>
+      <div class="final-grid">
+        <div class="final-card"><div class="fc-label">The command</div><p data-editable="s12-fc1">None shall appear before me empty-handed — Exodus 23:15</p></div>
+        <div class="final-card"><div class="fc-label">The measure</div><p data-editable="s12-fc2">As he is able, according to the blessing — Deut. 16:17</p></div>
+        <div class="final-card"><div class="fc-label">The posture</div><p data-editable="s12-fc3">God loves a cheerful giver — 2 Corinthians 9:7</p></div>
+        <div class="final-card"><div class="fc-label">The promise</div><p data-editable="s12-fc4">In due season you will reap, if you do not give up — Galatians 6:9</p></div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /deck -->
+
+<!-- ============================================================
+     EDITOR MODAL
+     ============================================================ -->
+<div class="editor-overlay" id="editorOverlay">
+  <div class="editor-modal">
+    <div class="editor-header">
+      <div>
+        <h3>Slide Editor</h3>
+        <span id="editorSlideLabel">Editing Slide 1</span>
+      </div>
+      <button class="editor-close" onclick="closeEditor()">✕</button>
+    </div>
+    <div class="editor-nav" id="editorNav">
+      <span class="editor-slide-label">Slide:</span>
+    </div>
+    <div class="editor-body" id="editorBody"></div>
+    <div class="editor-footer">
+      <button class="editor-btn secondary" onclick="closeEditor()">Cancel</button>
+      <button class="editor-btn primary" onclick="applyEdits()">Apply Changes</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     BOTTOM CHROME
+     ============================================================ -->
+<div class="bottom-chrome">
+  <!-- Dots -->
+  <div class="dots-row" id="dots"></div>
+  <!-- Nav + Controls -->
+  <div class="nav-row">
+    <div class="nav-pill">
+      <button class="nav-btn" onclick="navigate(-1)">
+        <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+        Prev
+      </button>
+      <span class="slide-counter" id="counter">1 / 13</span>
+      <button class="nav-btn" onclick="navigate(1)">
+        Next
+        <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+      </button>
+    </div>
+    <div class="ctrl-pill">
+      <!-- Theme toggle -->
+      <button class="icon-btn" id="themeBtn" onclick="toggleTheme()" title="Toggle light/dark">
+        <span id="themeIcon">🌙</span>
+      </button>
+      <!-- Editor (presenter-only, PIN gated) -->
+      <button class="icon-btn" onclick="promptPin()" title="Presenter edit">🔒</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     SCRIPT
+     ============================================================ -->
+<script>
+const TOTAL = 13;
+let current = 0;
+let isDark = false;
+
+/* ---------- THEME ---------- */
+function toggleTheme() {
+  isDark = !isDark;
+  document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+  document.getElementById('themeIcon').textContent = isDark ? '☀️' : '🌙';
+}
+
+/* ---------- NAVIGATION ---------- */
+const dotsEl = document.getElementById('dots');
+for (let i = 0; i < TOTAL; i++) {
+  const d = document.createElement('div');
+  d.className = 'dot' + (i === 0 ? ' active' : '');
+  d.onclick = () => goTo(i);
+  dotsEl.appendChild(d);
+}
+
+function goTo(n) {
+  document.getElementById('slide-' + current).classList.remove('active');
+  dotsEl.children[current].classList.remove('active');
+  current = Math.max(0, Math.min(TOTAL - 1, n));
+  document.getElementById('slide-' + current).classList.add('active');
+  dotsEl.children[current].classList.add('active');
+  document.getElementById('counter').textContent = (current + 1) + ' / ' + TOTAL;
+  // Show facilitator name in badge from slide 2 onward
+  const nameBadge = document.getElementById('badgeName');
+  if (current === 0) {
+    nameBadge.classList.remove('visible');
+  } else {
+    nameBadge.classList.add('visible');
+  }
+}
+
+function navigate(dir) { goTo(current + dir); }
+
+document.addEventListener('keydown', e => {
+  if (document.getElementById('editorOverlay').classList.contains('open')) return;
+  if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === ' ') { e.preventDefault(); navigate(1); }
+  if (e.key === 'ArrowLeft'  || e.key === 'ArrowUp')   { e.preventDefault(); navigate(-1); }
+  if (e.key === 'Escape') closeEditor();
+});
+
+let touchX = 0;
+document.addEventListener('touchstart', e => touchX = e.touches[0].clientX, {passive:true});
+document.addEventListener('touchend', e => {
+  if (document.getElementById('editorOverlay').classList.contains('open')) return;
+  const dx = e.changedTouches[0].clientX - touchX;
+  if (Math.abs(dx) > 48) navigate(dx < 0 ? 1 : -1);
+});
+
+
+/* ---------- EDITOR ---------- */
+// Collect all editable elements and build a map
+function getEditables(slideIndex) {
+  const slide = document.getElementById('slide-' + slideIndex);
+  if (!slide) return [];
+  return Array.from(slide.querySelectorAll('[data-editable]')).map(el => ({
+    key: el.getAttribute('data-editable'),
+    el,
+    label: el.getAttribute('data-editable').replace(/^s\d+-/, '').replace(/-/g,' ').replace(/\b\w/g,c=>c.toUpperCase()),
+    isMultiline: el.tagName === 'P' || el.tagName === 'DIV' || el.classList.contains('t-scripture') || el.classList.contains('anchor-quote')
+  }));
+}
+
+/* ---------- PIN GATE ---------- */
+const EDITOR_PIN = '2408'; // change this to your preferred PIN
+let presenterUnlocked = false;
+
+function promptPin() {
+  if (presenterUnlocked) { openEditor(); return; }
+  // Build a minimal inline PIN modal
+  const overlay = document.createElement('div');
+  overlay.id = 'pinOverlay';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.65);z-index:600;display:flex;align-items:center;justify-content:center;';
+  overlay.innerHTML = `
+    <div style="background:var(--editor-bg);color:var(--editor-text);border:1px solid var(--editor-border);border-radius:8px;padding:32px 28px;width:280px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.4);">
+      <div style="font-family:'Playfair Display',serif;font-size:20px;font-weight:700;color:var(--gold);margin-bottom:6px;">Presenter Access</div>
+      <div style="font-size:12px;letter-spacing:1px;color:var(--text-muted);margin-bottom:20px;text-transform:uppercase;">Enter PIN to edit</div>
+      <input id="pinInput" type="password" maxlength="8" inputmode="numeric"
+        style="width:100%;background:var(--card-bg);border:1px solid var(--editor-border);border-radius:4px;padding:10px 14px;color:var(--editor-text);font-size:20px;letter-spacing:8px;text-align:center;outline:none;font-family:'Outfit',sans-serif;"
+        placeholder="····" autofocus />
+      <div id="pinError" style="color:#c0392b;font-size:12px;margin-top:8px;min-height:16px;"></div>
+      <div style="display:flex;gap:10px;margin-top:16px;">
+        <button onclick="document.getElementById('pinOverlay').remove()"
+          style="flex:1;background:none;border:1px solid var(--editor-border);color:var(--text-muted);border-radius:20px;padding:8px;font-family:'Outfit',sans-serif;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;font-weight:600;cursor:pointer;">
+          Cancel
+        </button>
+        <button onclick="checkPin()"
+          style="flex:1;background:var(--gold);border:1px solid var(--gold);color:#000;border-radius:20px;padding:8px;font-family:'Outfit',sans-serif;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;font-weight:600;cursor:pointer;">
+          Unlock
+        </button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+  setTimeout(() => document.getElementById('pinInput').focus(), 80);
+  document.getElementById('pinInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter') checkPin();
+  });
+}
+
+function checkPin() {
+  const val = document.getElementById('pinInput').value;
+  if (val === EDITOR_PIN) {
+    presenterUnlocked = true;
+    // Swap lock icon to pencil
+    document.querySelector('[onclick="promptPin()"]').textContent = '✏️';
+    document.getElementById('pinOverlay').remove();
+    openEditor();
+  } else {
+    document.getElementById('pinError').textContent = 'Incorrect PIN. Try again.';
+    document.getElementById('pinInput').value = '';
+    document.getElementById('pinInput').focus();
+  }
+}
+
+let editorSlide = 0;
+let pendingEdits = {}; // { key: innerHTML }
+
+function openEditor() {
+  editorSlide = current;
+  pendingEdits = {};
+  renderEditorNav();
+  renderEditorBody(editorSlide);
+  document.getElementById('editorOverlay').classList.add('open');
+}
+
+function closeEditor() {
+  document.getElementById('editorOverlay').classList.remove('open');
+  pendingEdits = {};
+}
+
+function renderEditorNav() {
+  const nav = document.getElementById('editorNav');
+  nav.innerHTML = '<span class="editor-slide-label">Slide:</span>';
+  for (let i = 0; i < TOTAL; i++) {
+    const btn = document.createElement('button');
+    btn.className = 'editor-slide-btn' + (i === editorSlide ? ' active' : '');
+    btn.textContent = i + 1;
+    btn.onclick = () => {
+      editorSlide = i;
+      renderEditorNav();
+      renderEditorBody(i);
+    };
+    nav.appendChild(btn);
+  }
+}
+
+function renderEditorBody(slideIdx) {
+  document.getElementById('editorSlideLabel').textContent = 'Editing Slide ' + (slideIdx + 1);
+  const body = document.getElementById('editorBody');
+  body.innerHTML = '';
+  const editables = getEditables(slideIdx);
+  if (editables.length === 0) {
+    body.innerHTML = '<p style="color:var(--text-muted);font-size:13px;padding:8px 0;">No editable fields on this slide.</p>';
+    return;
+  }
+  editables.forEach(({key, el, label, isMultiline}) => {
+    const field = document.createElement('div');
+    field.className = 'editor-field';
+    const lbl = document.createElement('label');
+    lbl.textContent = label;
+    field.appendChild(lbl);
+    let input;
+    // Sanitize innerHTML to plain text for editing (strip tags for simple fields)
+    const rawHTML = el.innerHTML;
+    const plain = el.innerText || el.textContent;
+    if (isMultiline) {
+      input = document.createElement('textarea');
+      input.rows = 3;
+      input.value = plain;
+    } else {
+      input = document.createElement('input');
+      input.type = 'text';
+      input.value = plain;
+    }
+    input.setAttribute('data-edit-key', key);
+    input.setAttribute('data-multiline', isMultiline ? '1' : '0');
+    field.appendChild(input);
+    body.appendChild(field);
+  });
+}
+
+function applyEdits() {
+  const inputs = document.querySelectorAll('#editorBody [data-edit-key]');
+  inputs.forEach(input => {
+    const key = input.getAttribute('data-edit-key');
+    const el = document.querySelector('[data-editable="' + key + '"]');
+    if (!el) return;
+    const val = input.value;
+    const hasEm = el.querySelector('em');
+    if (hasEm) {
+      const lines = val.split('\n').filter(l => l.trim());
+      if (lines.length >= 2) {
+        el.innerHTML = lines[0] + '<br><em>' + lines.slice(1).join(' ') + '</em>';
+      } else {
+        el.textContent = val;
+      }
+    } else {
+      el.textContent = val;
+    }
+  });
+  // Sync top-left badge with slide 1 edits
+  const heroEl = document.querySelector('[data-editable="s0-hero"]');
+  if (heroEl) {
+    document.getElementById('badgeTitle').textContent =
+      heroEl.innerText.replace(/\n/g, ' ').trim();
+  }
+  const facilitatorEl = document.querySelector('[data-editable="s0-facilitator"]');
+  if (facilitatorEl) {
+    document.getElementById('badgeName').textContent =
+      facilitatorEl.innerText.trim();
+  }
+  closeEditor();
+}
+
+// Close on overlay background click
+document.getElementById('editorOverlay').addEventListener('click', function(e) {
+  if (e.target === this) closeEditor();
+});
+</script>
+</body>
+</html>
