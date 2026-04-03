@@ -439,7 +439,7 @@ html, body {
    PORTRAIT HINT — slide 1 only, mobile only
    ============================================================ */
 .portrait-hint {
-  position:absolute; bottom: 130px;px; left:50%;
+  position:absolute; bottom:118px; left:50%;
   transform:translateX(-50%);
   display:flex; align-items:center; gap:10px;
   opacity:0.4; pointer-events:none;
@@ -813,11 +813,11 @@ html, body {
   <div class="dots-row" id="dots"></div>
   <div class="nav-row">
     <div class="nav-pill">
-      <button class="nav-btn" onclick="navigate(-1)">
+      <button class="nav-btn" onclick="presenterAdvance(-1)">
         <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>Prev
       </button>
       <span class="slide-counter" id="counter">1 / 13</span>
-      <button class="nav-btn" id="nextBtn" onclick="navigate(1)">
+      <button class="nav-btn" id="nextBtn" onclick="presenterAdvance(1)">
         Next<svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
       </button>
     </div>
@@ -1038,7 +1038,7 @@ const dotsEl = document.getElementById('dots');
 for (let i = 0; i < TOTAL; i++) {
   const d = document.createElement('div');
   d.className = 'dot' + (i === 0 ? ' active' : '');
-  d.onclick = () => goTo(i);
+  d.onclick = () => presenterGoTo(i);
   dotsEl.appendChild(d);
 }
 
@@ -1056,13 +1056,28 @@ function goTo(n) {
   updateLockUI();
 }
 
+// Internal navigation — does not raise ceiling or broadcast
+// All user-facing navigation goes through presenterAdvance()
 function navigate(dir) { goTo(current + dir); }
 
 function presenterAdvance(dir) {
-  if (!isPresenter) { navigate(dir); return; }
-  if (slideLocked && dir > 0) lockCeiling = Math.min(TOTAL - 1, current + 1);
+  if (isPresenter && slideLocked && dir > 0) {
+    // Raise ceiling to wherever presenter is going — students follow up to this point
+    lockCeiling = Math.min(TOTAL - 1, current + 1);
+    updateLockUI();
+  }
   goTo(current + dir);
-  broadcastState();
+  if (isPresenter) broadcastState();
+}
+
+// Presenter dot clicks should also raise the ceiling if jumping forward
+function presenterGoTo(n) {
+  if (isPresenter && slideLocked && n > current) {
+    lockCeiling = Math.min(TOTAL - 1, n);
+    updateLockUI();
+  }
+  goTo(n);
+  if (isPresenter) broadcastState();
 }
 
 document.addEventListener('keydown', e => {
