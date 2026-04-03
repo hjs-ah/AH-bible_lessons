@@ -889,34 +889,52 @@ function hideLoading() {
 /* ============================================================
    ABLY — real-time sync
    ============================================================ */
+let ablyConnected = false;
+
 function initAbly() {
   const client = new Ably.Realtime({ key: ABLY_KEY });
   ablyChannel  = client.channels.get(CHANNEL_NAME);
 
   client.connection.on('connected', () => {
+    ablyConnected = true;
     setSyncStatus('connected', 'Live');
-    // When a student connects, request the current presenter state
-    // so they catch up immediately even if they joined mid-session
-    if (!isPresenter) {
-      ablyChannel.publish('student-joined', { ts: Date.now() });
-    }
+    // Small delay so isPresenter has time to be set if PIN was already entered
+    setTimeout(() => {
+      if (isPresenter) {
+        // Presenter just (re)connected — broadcast current state
+        broadcastState();
+      } else {
+        // Student just connected — request current state from presenter
+        ablyChannel.publish('student-joined', { ts: Date.now() });
+      }
+    }, 300);
   });
-  client.connection.on('disconnected', () => setSyncStatus('', 'Offline'));
-  client.connection.on('failed',       () => setSyncStatus('', 'Offline'));
 
-  // ── Presenter listens for students joining and re-broadcasts state ──────
-  ablyChannel.subscribe('student-joined', () => {
+  client.connection.on('disconnected', () => {
+    ablyConnected = false;
+    setSyncStatus('', 'Offline');
+  });
+  client.connection.on('failed', () => {
+    ablyConnected = false;
+    setSyncStatus('', 'Offline');
+    // Show visible error so we know Ably failed
+    console.error('Ably connection failed — check API key');
+  });
+
+  // ── Presenter: student joined → re-broadcast current state immediately ──
+  ablyChannel.subscribe('student-joined', (msg) => {
     if (!isPresenter) return;
-    // Re-send current state so late-joining students catch up
+    console.log('Student joined, broadcasting state');
     broadcastState();
   });
 
-  // ── Students receive presenter state ────────────────────────────────────
+  // ── Students: receive and apply presenter state ──────────────────────────
   ablyChannel.subscribe('presenter-state', (msg) => {
-    if (isPresenter) return; // presenter ignores own echoes
+    if (isPresenter) return;
     const { slide, locked, ceiling, content } = msg.data;
+    console.log('Received presenter state:', { slide, locked, ceiling });
 
-    // Apply any content updates broadcast by presenter
+    // Apply content updates
     if (content) {
       Object.entries(content).forEach(([key, val]) => {
         notionContent[key] = val;
@@ -925,27 +943,34 @@ function initAbly() {
       });
     }
 
-    // Apply lock state — this is the authoritative source for students
+    // Set lock state FIRST before any navigation
     slideLocked = locked;
     lockCeiling = locked ? ceiling : TOTAL - 1;
 
-    // Follow the presenter's slide when locked
+    // Force navigate to presenter's slide when locked
     if (locked) {
-      // Force navigation — bypass local ceiling check by setting ceiling first
       const target = Math.max(0, Math.min(TOTAL - 1, slide));
-      document.getElementById('slide-' + current).classList.remove('active');
-      dotsEl.children[current].classList.remove('active');
-      current = target;
-      document.getElementById('slide-' + current).classList.add('active');
-      dotsEl.children[current].classList.add('active');
-      document.getElementById('counter').textContent = (current + 1) + ' / ' + TOTAL;
-      const nameBadge = document.getElementById('badgeName');
-      current === 0 ? nameBadge.classList.remove('visible') : nameBadge.classList.add('visible');
+      if (target !== current) {
+        document.getElementById('slide-' + current).classList.remove('active');
+        dotsEl.children[current].classList.remove('active');
+        current = target;
+        document.getElementById('slide-' + current).classList.add('active');
+        dotsEl.children[current].classList.add('active');
+        document.getElementById('counter').textContent = (current + 1) + ' / ' + TOTAL;
+        const nameBadge = document.getElementById('badgeName');
+        current === 0 ? nameBadge.classList.remove('visible') : nameBadge.classList.add('visible');
+      }
     }
 
     updateLockUI();
     setSyncStatus('following', locked ? 'Following' : 'Live');
   });
+
+  // ── Heartbeat: presenter re-broadcasts state every 5 seconds ─────────────
+  // This ensures students who join at any time catch up within 5 seconds
+  setInterval(() => {
+    if (isPresenter && ablyConnected) broadcastState();
+  }, 5000);
 }
 
 function setSyncStatus(dotClass, label) {
@@ -957,6 +982,7 @@ function setSyncStatus(dotClass, label) {
 
 function broadcastState(contentUpdate = null) {
   if (!ablyChannel || !isPresenter) return;
+  console.log('Broadcasting state:', { slide: current, locked: slideLocked, ceiling: lockCeiling });
   ablyChannel.publish('presenter-state', {
     slide:   current,
     locked:  slideLocked,
