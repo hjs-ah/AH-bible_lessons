@@ -6,6 +6,8 @@
 <title>Don't Come Empty — First Fruits & Feast Giving</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📖</text></svg>">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,700;0,900;1,400;1,700&family=Outfit:wght@200;300;400;500;600&display=swap" rel="stylesheet">
+<!-- Ably realtime SDK -->
+<script src="https://cdn.ably.com/lib/ably.min-2.js"></script>
 <style>
 /* ============================================================
    THEME VARIABLES
@@ -18,8 +20,6 @@
   --olive: #5A6E30;
   --rust: #8B3A22;
   --facilitator-color: #4A7FB5;
-
-  /* LIGHT THEME (default) */
   --bg-dark:  #F5F0E8;
   --bg-mid:   #EDE6D8;
   --bg-warm:  #E8DDD0;
@@ -46,7 +46,6 @@
   --editor-border: #d0c5b0;
   --shadow: 0 2px 16px rgba(0,0,0,0.08);
 }
-
 [data-theme="dark"] {
   --gold: #D4A843;
   --gold-bright: #F0C96A;
@@ -55,7 +54,6 @@
   --olive: #6B7C45;
   --rust: #9B4A30;
   --facilitator-color: #7AB3E0;
-
   --bg-dark:  #0D0A04;
   --bg-mid:   #16120A;
   --bg-warm:  #1E1810;
@@ -87,7 +85,6 @@
    RESET & BASE
    ============================================================ */
 *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
-
 html, body {
   width:100%; height:100%;
   overflow:hidden;
@@ -100,141 +97,90 @@ html, body {
 /* ============================================================
    SLIDE ENGINE
    ============================================================ */
-.deck {
-  width: 100vw;
-  height: 100vh;
-  position: relative;
-  overflow: hidden;
-}
-
+.deck { width:100vw; height:100vh; position:relative; overflow:hidden; }
 .slide {
-  position: absolute;
-  inset: 0;
-  width: 100%; height: 100%;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.65s cubic-bezier(0.4,0,0.2,1);
-  overflow: hidden;
-  padding-bottom: 110px;
-}
-
-.slide.active { opacity:1; pointer-events:all; }
-
-.bg-dark  { background: var(--bg-dark);  }
-.bg-mid   { background: var(--bg-mid);   }
-.bg-warm  { background: var(--bg-warm);  }
-
-/* grain */
-.slide::after {
-  content:'';
   position:absolute; inset:0;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.025'/%3E%3C/svg%3E");
+  width:100%; height:100%;
+  display:flex; flex-direction:column;
+  justify-content:center; align-items:center;
+  opacity:0; pointer-events:none;
+  transition:opacity 0.65s cubic-bezier(0.4,0,0.2,1);
+  overflow:hidden; padding-bottom:110px;
+}
+.slide.active { opacity:1; pointer-events:all; }
+.bg-dark  { background:var(--bg-dark);  }
+.bg-mid   { background:var(--bg-mid);   }
+.bg-warm  { background:var(--bg-warm);  }
+.slide::after {
+  content:''; position:absolute; inset:0;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.025'/%3E%3C/svg%3E");
   pointer-events:none; z-index:1;
 }
 .slide > * { position:relative; z-index:2; }
-
-/* glows */
 .glow-top {
-  position:absolute; top:-20%; left:50%;
-  transform:translateX(-50%);
+  position:absolute; top:-20%; left:50%; transform:translateX(-50%);
   width:70%; height:60%;
-  background: radial-gradient(ellipse, var(--glow-color-1) 0%, transparent 70%);
+  background:radial-gradient(ellipse,var(--glow-color-1) 0%,transparent 70%);
   pointer-events:none; z-index:0;
 }
 .glow-bottom-left {
   position:absolute; bottom:-10%; left:-10%;
   width:50%; height:50%;
-  background: radial-gradient(ellipse, var(--glow-color-2) 0%, transparent 70%);
+  background:radial-gradient(ellipse,var(--glow-color-2) 0%,transparent 70%);
   pointer-events:none; z-index:0;
 }
 .glow-center {
-  position:absolute; top:50%; left:50%;
-  transform:translate(-50%,-50%);
+  position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
   width:80%; height:80%;
-  background: radial-gradient(ellipse, var(--glow-color-1) 0%, transparent 65%);
+  background:radial-gradient(ellipse,var(--glow-color-1) 0%,transparent 65%);
   pointer-events:none; z-index:0;
 }
 
 /* ============================================================
    TYPOGRAPHY
    ============================================================ */
-.deco-line {
-  width:60px; height:1px;
-  background: linear-gradient(90deg, transparent, var(--gold), transparent);
-  margin:0 auto;
-}
-
+.deco-line { width:60px; height:1px; background:linear-gradient(90deg,transparent,var(--gold),transparent); margin:0 auto; }
 .overline {
-  font-size: clamp(9px,1.5vw,11px);
-  letter-spacing:4px; text-transform:uppercase;
-  color: var(--overline-color);
-  font-weight:600;
-  display:flex; align-items:center; gap:14px;
-  margin-bottom:20px;
+  font-size:clamp(9px,1.5vw,11px); letter-spacing:4px; text-transform:uppercase;
+  color:var(--overline-color); font-weight:600;
+  display:flex; align-items:center; gap:14px; margin-bottom:20px;
 }
-.overline::before,.overline::after {
-  content:''; width:24px; height:1px;
-  background:var(--gold); opacity:0.5;
-}
-
+.overline::before,.overline::after { content:''; width:24px; height:1px; background:var(--gold); opacity:0.5; }
 .t-hero {
   font-family:'Playfair Display',serif;
-  font-size: clamp(40px,7vw,88px);
-  font-weight:900; line-height:0.95; letter-spacing:-1px;
-  color: var(--text-main);
+  font-size:clamp(40px,7vw,88px); font-weight:900; line-height:0.95; letter-spacing:-1px;
+  color:var(--text-main);
 }
 .t-hero em { font-style:italic; color:var(--gold-bright); display:block; }
-
 .t-title {
   font-family:'Playfair Display',serif;
-  font-size: clamp(24px,4vw,58px);
-  font-weight:700; line-height:1.1;
-  color: var(--text-main);
+  font-size:clamp(24px,4vw,58px); font-weight:700; line-height:1.1; color:var(--text-main);
 }
 .t-title em { font-style:italic; color:var(--gold-bright); }
-
 .t-subtitle {
   font-family:'Playfair Display',serif;
-  font-size: clamp(15px,2vw,24px);
-  font-weight:400; font-style:italic;
-  color: var(--text-muted); line-height:1.5;
+  font-size:clamp(15px,2vw,24px); font-weight:400; font-style:italic;
+  color:var(--text-muted); line-height:1.5;
 }
-
 .t-body {
-  font-size: clamp(13px,1.4vw,17px);
-  font-weight:300; color:var(--text-muted);
-  line-height:1.8; max-width:640px;
+  font-size:clamp(13px,1.4vw,17px); font-weight:300;
+  color:var(--text-muted); line-height:1.8; max-width:640px;
 }
 .t-body strong { color:var(--text-main); font-weight:500; }
-
 .t-scripture {
   font-family:'Playfair Display',serif;
-  font-size: clamp(14px,1.7vw,20px);
-  font-style:italic; font-weight:400;
-  color:var(--gold-bright); line-height:1.7;
-  max-width:680px; text-align:center;
+  font-size:clamp(14px,1.7vw,20px); font-style:italic; font-weight:400;
+  color:var(--gold-bright); line-height:1.7; max-width:680px; text-align:center;
 }
-
 .t-ref {
-  font-size:10px; letter-spacing:2px;
-  text-transform:uppercase;
-  color:var(--gold); font-weight:600;
-  margin-top:10px; display:block; text-align:center;
+  font-size:10px; letter-spacing:2px; text-transform:uppercase;
+  color:var(--gold); font-weight:600; margin-top:10px; display:block; text-align:center;
 }
-
 .facilitator {
   font-family:'Playfair Display',serif;
-  font-size: clamp(16px,2.1vw,23px);
-  font-style:normal; font-weight:400;
-  color: var(--facilitator-color);
-  margin-top:10px; text-align:center;
-  letter-spacing:0.3px;
+  font-size:clamp(16px,2.1vw,23px); font-style:normal; font-weight:400;
+  color:var(--facilitator-color); margin-top:10px; text-align:center; letter-spacing:0.3px;
 }
-
 .kw { color:var(--gold-bright); font-weight:500; }
 
 /* ============================================================
@@ -242,71 +188,45 @@ html, body {
    ============================================================ */
 .section-badge {
   display:inline-flex; align-items:center; gap:8px;
-  background:var(--badge-bg);
-  border:1px solid var(--gold-border);
+  background:var(--badge-bg); border:1px solid var(--gold-border);
   border-radius:4px; padding:4px 12px;
   font-size:clamp(9px,1.2vw,11px); letter-spacing:2px;
-  text-transform:uppercase; color:var(--gold);
-  font-weight:600; margin-bottom:18px;
+  text-transform:uppercase; color:var(--gold); font-weight:600; margin-bottom:18px;
 }
-
 .scripture-block {
-  background:var(--scripture-bg);
-  border:1px solid var(--gold-border);
-  border-left:3px solid var(--gold);
-  border-radius:0 4px 4px 0;
-  padding:20px 24px;
-  max-width:700px; width:100%; margin:0 auto;
+  background:var(--scripture-bg); border:1px solid var(--gold-border);
+  border-left:3px solid var(--gold); border-radius:0 4px 4px 0;
+  padding:20px 24px; max-width:700px; width:100%; margin:0 auto;
 }
-
-/* cards */
 .card {
-  background:var(--card-bg);
-  border:1px solid var(--gold-border);
+  background:var(--card-bg); border:1px solid var(--gold-border);
   border-radius:4px; padding:18px 20px;
-  transition:border-color 0.3s, box-shadow 0.3s;
-  box-shadow: var(--shadow);
+  transition:border-color 0.3s,box-shadow 0.3s; box-shadow:var(--shadow);
 }
 .card:hover { border-color:rgba(212,168,67,0.5); }
 .card-icon { font-size:24px; margin-bottom:10px; display:block; }
 .card h3 {
-  font-family:'Playfair Display',serif;
-  font-size:clamp(14px,1.5vw,18px);
-  font-weight:700; color:var(--text-main);
-  margin-bottom:6px; line-height:1.2;
+  font-family:'Playfair Display',serif; font-size:clamp(14px,1.5vw,18px);
+  font-weight:700; color:var(--text-main); margin-bottom:6px; line-height:1.2;
 }
 .card p { font-size:clamp(11px,1.1vw,13.5px); color:var(--text-muted); line-height:1.7; font-weight:300; }
 .card .card-ref { font-size:9px; letter-spacing:1.5px; text-transform:uppercase; color:var(--gold); font-weight:600; margin-top:10px; display:block; opacity:0.75; }
 .card.gold-accent { border-top:3px solid var(--gold); }
 .card.olive-accent { border-top:3px solid var(--olive); }
 .card.rust-accent  { border-top:3px solid var(--rust); }
-
-/* anchor quote */
 .anchor-quote {
   font-family:'Playfair Display',serif;
-  font-size:clamp(18px,2.8vw,32px);
-  font-style:italic; font-weight:400;
-  color:var(--text-main); text-align:center;
-  max-width:720px; line-height:1.5;
+  font-size:clamp(18px,2.8vw,32px); font-style:italic; font-weight:400;
+  color:var(--text-main); text-align:center; max-width:720px; line-height:1.5;
 }
 .anchor-quote em { color:var(--gold-bright); font-style:normal; }
 
 /* ============================================================
    GRID LAYOUTS
    ============================================================ */
-.grid-2 {
-  display:grid; grid-template-columns:1fr 1fr;
-  gap:16px; width:100%; max-width:860px; padding:0 24px;
-}
-.grid-3 {
-  display:grid; grid-template-columns:1fr 1fr 1fr;
-  gap:14px; width:100%; max-width:940px; padding:0 24px;
-}
-.grid-4 {
-  display:grid; grid-template-columns:1fr 1fr;
-  gap:12px; width:100%; max-width:820px; padding:0 24px;
-}
-
+.grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:16px; width:100%; max-width:860px; padding:0 24px; }
+.grid-3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:14px; width:100%; max-width:940px; padding:0 24px; }
+.grid-4 { display:grid; grid-template-columns:1fr 1fr; gap:12px; width:100%; max-width:820px; padding:0 24px; }
 @media (max-width:700px) {
   .grid-2 { grid-template-columns:1fr; gap:10px; }
   .grid-3 { grid-template-columns:1fr 1fr; gap:10px; }
@@ -320,21 +240,9 @@ html, body {
 /* ============================================================
    SPLIT LAYOUT
    ============================================================ */
-.split {
-  display:grid; grid-template-columns:1fr 1fr;
-  width:100%; height:100%;
-  padding-bottom:110px;
-}
-.split-left {
-  display:flex; flex-direction:column; justify-content:center;
-  padding:40px 36px 40px 48px;
-  border-right:1px solid var(--split-border);
-}
-.split-right {
-  display:flex; flex-direction:column; justify-content:center;
-  padding:40px 48px 40px 36px;
-}
-
+.split { display:grid; grid-template-columns:1fr 1fr; width:100%; height:100%; padding-bottom:110px; }
+.split-left { display:flex; flex-direction:column; justify-content:center; padding:40px 36px 40px 48px; border-right:1px solid var(--split-border); }
+.split-right { display:flex; flex-direction:column; justify-content:center; padding:40px 48px 40px 36px; }
 @media (max-width:700px) {
   .split { grid-template-columns:1fr; overflow-y:auto; padding-bottom:120px; }
   .split-left { border-right:none; border-bottom:1px solid var(--split-border); padding:28px 20px 20px; }
@@ -344,392 +252,162 @@ html, body {
 /* ============================================================
    PRINCIPLES
    ============================================================ */
-.principle {
-  display:flex; gap:16px; align-items:flex-start;
-  padding:16px 0;
-  border-bottom:1px solid var(--principle-border);
-}
+.principle { display:flex; gap:16px; align-items:flex-start; padding:16px 0; border-bottom:1px solid var(--principle-border); }
 .principle:last-child { border-bottom:none; }
-.principle-num {
-  font-family:'Playfair Display',serif;
-  font-size:36px; font-weight:900;
-  color:var(--gold); opacity:0.3;
-  line-height:1; flex-shrink:0; width:44px;
-}
-.principle-content h4 {
-  font-family:'Playfair Display',serif;
-  font-size:clamp(14px,1.6vw,18px);
-  font-weight:700; color:var(--text-main); margin-bottom:4px;
-}
-.principle-content p {
-  font-size:clamp(11px,1.2vw,13.5px);
-  color:var(--text-muted); line-height:1.65; font-weight:300;
-}
-.principle-content .ref {
-  font-size:9px; letter-spacing:1.5px; text-transform:uppercase;
-  color:var(--gold); font-weight:600; margin-top:5px; display:block; opacity:0.75;
-}
+.principle-num { font-family:'Playfair Display',serif; font-size:36px; font-weight:900; color:var(--gold); opacity:0.3; line-height:1; flex-shrink:0; width:44px; }
+.principle-content h4 { font-family:'Playfair Display',serif; font-size:clamp(14px,1.6vw,18px); font-weight:700; color:var(--text-main); margin-bottom:4px; }
+.principle-content p { font-size:clamp(11px,1.2vw,13.5px); color:var(--text-muted); line-height:1.65; font-weight:300; }
+.principle-content .ref { font-size:9px; letter-spacing:1.5px; text-transform:uppercase; color:var(--gold); font-weight:600; margin-top:5px; display:block; opacity:0.75; }
 
 /* ============================================================
    TABLE
    ============================================================ */
-.table-wrap {
-  width:100%; max-width:820px;
-  border:1px solid var(--gold-border);
-  border-radius:4px; overflow:hidden;
-  box-shadow: var(--shadow);
-}
+.table-wrap { width:100%; max-width:820px; border:1px solid var(--gold-border); border-radius:4px; overflow:hidden; box-shadow:var(--shadow); }
 .table-wrap table { width:100%; border-collapse:collapse; }
-.table-wrap th {
-  background:var(--table-header-bg);
-  font-size:clamp(9px,1.1vw,10px); letter-spacing:2px;
-  text-transform:uppercase; color:var(--gold); font-weight:600;
-  font-family:'Outfit',sans-serif; padding:12px 16px;
-  text-align:left; border-bottom:1px solid var(--gold-border);
-}
-.table-wrap td {
-  padding:12px 16px;
-  font-size:clamp(11px,1.2vw,14px);
-  color:var(--text-muted);
-  border-bottom:1px solid var(--table-border);
-  font-weight:300; line-height:1.45;
-}
-.table-wrap td:first-child {
-  color:var(--text-main); font-weight:500;
-  font-family:'Playfair Display',serif;
-  font-size:clamp(12px,1.3vw,15px);
-}
+.table-wrap th { background:var(--table-header-bg); font-size:clamp(9px,1.1vw,10px); letter-spacing:2px; text-transform:uppercase; color:var(--gold); font-weight:600; font-family:'Outfit',sans-serif; padding:12px 16px; text-align:left; border-bottom:1px solid var(--gold-border); }
+.table-wrap td { padding:12px 16px; font-size:clamp(11px,1.2vw,14px); color:var(--text-muted); border-bottom:1px solid var(--table-border); font-weight:300; line-height:1.45; }
+.table-wrap td:first-child { color:var(--text-main); font-weight:500; font-family:'Playfair Display',serif; font-size:clamp(12px,1.3vw,15px); }
 .table-wrap tr:last-child td { border-bottom:none; }
 .table-wrap tr:hover td { background:var(--table-row-hover); }
 
 /* ============================================================
    FINAL GRID
    ============================================================ */
-.final-grid {
-  display:grid; grid-template-columns:1fr 1fr;
-  gap:10px; max-width:640px; width:100%;
-  padding:0 24px; margin-top:24px;
-}
-.final-card {
-  background:var(--gold-dim);
-  border:1px solid var(--gold-border);
-  border-radius:4px; padding:14px 16px;
-}
-.final-card .fc-label {
-  font-size:9px; letter-spacing:2px;
-  text-transform:uppercase; color:var(--gold);
-  font-weight:600; margin-bottom:5px;
-}
+.final-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; max-width:640px; width:100%; padding:0 24px; margin-top:24px; }
+.final-card { background:var(--gold-dim); border:1px solid var(--gold-border); border-radius:4px; padding:14px 16px; }
+.final-card .fc-label { font-size:9px; letter-spacing:2px; text-transform:uppercase; color:var(--gold); font-weight:600; margin-bottom:5px; }
 .final-card p { font-size:clamp(11px,1.2vw,13px); color:var(--text-muted); line-height:1.6; font-weight:300; }
-
-@media (max-width:480px) {
-  .final-grid { grid-template-columns:1fr; }
-}
+@media (max-width:480px) { .final-grid { grid-template-columns:1fr; } }
 
 /* ============================================================
    SLIDE CONTENT WRAPPER
    ============================================================ */
-.slide-content {
-  display:flex; flex-direction:column;
-  align-items:center; text-align:center;
-  padding:24px 24px 0;
-  gap:16px; width:100%; max-width:100%;
-}
-.slide-content.left-align {
-  align-items:flex-start; text-align:left;
-  padding:40px 60px 0;
-}
+.slide-content { display:flex; flex-direction:column; align-items:center; text-align:center; padding:24px 24px 0; gap:16px; width:100%; max-width:100%; }
+.slide-content.left-align { align-items:flex-start; text-align:left; padding:40px 60px 0; }
 .wide { max-width:860px; padding:0 24px; }
 
 /* ============================================================
-   BOTTOM CHROME: DOTS + NAV + CONTROLS
+   BOTTOM CHROME
    ============================================================ */
 .bottom-chrome {
-  position:fixed; bottom:0; left:0; right:0;
-  z-index:200;
-  display:flex; flex-direction:column;
-  align-items:center;
-  padding-bottom:env(safe-area-inset-bottom, 8px);
+  position:fixed; bottom:0; left:0; right:0; z-index:200;
+  display:flex; flex-direction:column; align-items:center;
+  padding-bottom:env(safe-area-inset-bottom,8px);
 }
-
-/* Dots row */
-.dots-row {
-  display:flex; align-items:center; justify-content:center;
-  gap:6px; padding:6px 16px;
-  flex-wrap:wrap; max-width:100vw;
-}
-.dot {
-  width:7px; height:7px; border-radius:50%;
-  background:var(--text-dim); cursor:pointer;
-  transition:all 0.3s; flex-shrink:0;
-  border:1px solid transparent;
-}
-.dot.active {
-  background:var(--gold); transform:scale(1.35);
-  border-color:var(--gold-border);
-}
+.dots-row { display:flex; align-items:center; justify-content:center; gap:6px; padding:6px 16px; flex-wrap:wrap; max-width:100vw; }
+.dot { width:7px; height:7px; border-radius:50%; background:var(--text-dim); cursor:pointer; transition:all 0.3s; flex-shrink:0; border:1px solid transparent; }
+.dot.active { background:var(--gold); transform:scale(1.35); border-color:var(--gold-border); }
 .dot:hover { background:var(--gold-bright); }
-
-/* Nav + controls row */
-.nav-row {
-  display:flex; align-items:center; justify-content:center;
-  gap:8px; padding:0 16px 10px;
-  flex-wrap:wrap;
-}
-
-.nav-pill {
-  display:flex; align-items:center; gap:12px;
-  background:var(--nav-bg);
-  border:1px solid var(--nav-border);
-  border-radius:50px; padding:8px 18px;
-  backdrop-filter:blur(12px);
-  box-shadow: var(--shadow);
-}
-
-.ctrl-pill {
-  display:flex; align-items:center; gap:4px;
-  background:var(--nav-bg);
-  border:1px solid var(--nav-border);
-  border-radius:50px; padding:8px 14px;
-  backdrop-filter:blur(12px);
-  box-shadow: var(--shadow);
-}
-
-.nav-btn {
-  background:none; border:none;
-  color:var(--text-muted);
-  font-family:'Outfit',sans-serif;
-  font-size:11px; letter-spacing:1.5px;
-  text-transform:uppercase; font-weight:600;
-  cursor:pointer; padding:5px 12px;
-  border-radius:20px;
-  transition:all 0.2s;
-  display:flex; align-items:center; gap:6px;
-}
+.nav-row { display:flex; align-items:center; justify-content:center; gap:8px; padding:0 16px 10px; flex-wrap:wrap; }
+.nav-pill { display:flex; align-items:center; gap:12px; background:var(--nav-bg); border:1px solid var(--nav-border); border-radius:50px; padding:8px 18px; backdrop-filter:blur(12px); box-shadow:var(--shadow); }
+.ctrl-pill { display:flex; align-items:center; gap:4px; background:var(--nav-bg); border:1px solid var(--nav-border); border-radius:50px; padding:8px 14px; backdrop-filter:blur(12px); box-shadow:var(--shadow); }
+.nav-btn { background:none; border:none; color:var(--text-muted); font-family:'Outfit',sans-serif; font-size:11px; letter-spacing:1.5px; text-transform:uppercase; font-weight:600; cursor:pointer; padding:5px 12px; border-radius:20px; transition:all 0.2s; display:flex; align-items:center; gap:6px; }
 .nav-btn:hover { color:var(--gold-bright); background:var(--gold-dim); }
 .nav-btn svg { width:13px; height:13px; fill:none; stroke:currentColor; stroke-width:2.5; stroke-linecap:round; stroke-linejoin:round; }
-
-.slide-counter {
-  font-size:10px; letter-spacing:2px;
-  color:var(--text-dim); font-weight:500;
-  min-width:48px; text-align:center;
-}
-
-/* icon buttons */
-.icon-btn {
-  background:none; border:none;
-  color:var(--text-muted);
-  cursor:pointer; padding:5px 8px;
-  border-radius:20px;
-  transition:all 0.2s;
-  font-size:14px; line-height:1;
-  display:flex; align-items:center; justify-content:center;
-}
+.slide-counter { font-size:10px; letter-spacing:2px; color:var(--text-dim); font-weight:500; min-width:48px; text-align:center; }
+.icon-btn { background:none; border:none; color:var(--text-muted); cursor:pointer; padding:5px 8px; border-radius:20px; transition:all 0.2s; font-size:14px; line-height:1; display:flex; align-items:center; justify-content:center; }
 .icon-btn:hover { color:var(--gold-bright); background:var(--gold-dim); }
 .icon-btn.active-btn { color:var(--gold-bright); }
 
 /* ============================================================
-   SLIDE LOCK INDICATOR
-   ============================================================ */
-.lock-indicator {
-  position:fixed; top:14px;
-  left:50%; transform:translateX(-50%);
-  z-index:200;
-  display:none;
-  align-items:center; gap:6px;
-  background:var(--nav-bg);
-  border:1px solid var(--gold-border);
-  border-radius:20px;
-  padding:4px 12px;
-  font-size:9px; letter-spacing:2px;
-  text-transform:uppercase; font-weight:600;
-  color:var(--gold); opacity:0.8;
-  backdrop-filter:blur(8px);
-  pointer-events:none;
-}
-.lock-indicator.visible { display:flex; }
-
-/* next button blocked state */
-.nav-btn.blocked {
-  opacity:0.28;
-  pointer-events:none;
-}
-
-/* dot blocked state */
-.dot.blocked {
-  opacity:0.22;
-  pointer-events:none;
-}
-
-/* ============================================================
    TOP BADGES
    ============================================================ */
-.title-badge {
-  position:fixed; top:12px; left:16px;
-  z-index:200;
-  display:flex; flex-direction:column; gap:3px;
-}
-.title-badge-main {
-  font-size:9px; letter-spacing:2px;
-  text-transform:uppercase; color:var(--gold);
-  font-weight:600; opacity:0.65;
-  line-height:1;
-}
-.title-badge-name {
-  font-family:'Outfit', sans-serif;
-  font-size:9px; letter-spacing:2px;
-  text-transform:uppercase; font-weight:600;
-  color:var(--facilitator-color);
-  opacity:0;
-  transition: opacity 0.5s;
-  line-height:1;
-}
+.title-badge { position:fixed; top:12px; left:16px; z-index:200; display:flex; flex-direction:column; gap:3px; }
+.title-badge-main { font-size:9px; letter-spacing:2px; text-transform:uppercase; color:var(--gold); font-weight:600; opacity:0.65; line-height:1; }
+.title-badge-name { font-family:'Outfit',sans-serif; font-size:9px; letter-spacing:2px; text-transform:uppercase; font-weight:600; color:var(--facilitator-color); opacity:0; transition:opacity 0.5s; line-height:1; }
 .title-badge-name.visible { opacity:0.85; }
-
-.key-hint {
-  position:fixed; top:14px; right:16px;
-  font-size:9px; letter-spacing:1.5px;
-  text-transform:uppercase; color:var(--text-dim);
-  font-weight:500; z-index:200;
-}
+.key-hint { position:fixed; top:14px; right:16px; font-size:9px; letter-spacing:1.5px; text-transform:uppercase; color:var(--text-dim); font-weight:500; z-index:200; }
 @media (max-width:600px) { .key-hint { display:none; } }
 
+/* ============================================================
+   LOCK INDICATOR
+   ============================================================ */
+.lock-indicator {
+  position:fixed; top:14px; left:50%; transform:translateX(-50%);
+  z-index:200; display:none; align-items:center; gap:6px;
+  background:var(--nav-bg); border:1px solid var(--gold-border);
+  border-radius:20px; padding:4px 12px;
+  font-size:9px; letter-spacing:2px; text-transform:uppercase; font-weight:600;
+  color:var(--gold); opacity:0.8; backdrop-filter:blur(8px); pointer-events:none;
+}
+.lock-indicator.visible { display:flex; }
+.nav-btn.blocked { opacity:0.28; pointer-events:none; }
+.dot.blocked { opacity:0.22; pointer-events:none; }
+
+/* ============================================================
+   SYNC STATUS BADGE (top-right, replaces key hint when synced)
+   ============================================================ */
+.sync-badge {
+  position:fixed; top:14px; right:16px;
+  font-size:9px; letter-spacing:1.5px; text-transform:uppercase;
+  color:var(--text-dim); font-weight:500; z-index:200;
+  display:flex; align-items:center; gap:5px;
+}
+.sync-dot {
+  width:6px; height:6px; border-radius:50%;
+  background:var(--text-dim); transition:background 0.4s;
+}
+.sync-dot.connected { background:#5a9e5a; }
+.sync-dot.following { background:var(--facilitator-color); }
+
+/* ============================================================
+   LOADING OVERLAY
+   ============================================================ */
+.loading-overlay {
+  position:fixed; inset:0; background:var(--bg-dark);
+  z-index:800; display:flex; flex-direction:column;
+  align-items:center; justify-content:center; gap:16px;
+  transition:opacity 0.5s;
+}
+.loading-overlay.hidden { opacity:0; pointer-events:none; }
+.loading-spinner {
+  width:32px; height:32px;
+  border:2px solid var(--gold-border);
+  border-top-color:var(--gold);
+  border-radius:50%;
+  animation:spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform:rotate(360deg); } }
+.loading-text { font-size:11px; letter-spacing:2px; text-transform:uppercase; color:var(--text-muted); font-weight:500; }
 
 /* ============================================================
    EDITOR MODAL
    ============================================================ */
-.editor-overlay {
-  display:none;
-  position:fixed; inset:0;
-  background:var(--editor-overlay);
-  z-index:500;
-  align-items:center; justify-content:center;
-  padding:16px;
-}
+.editor-overlay { display:none; position:fixed; inset:0; background:var(--editor-overlay); z-index:500; align-items:center; justify-content:center; padding:16px; }
 .editor-overlay.open { display:flex; }
-
-.editor-modal {
-  background:var(--editor-bg);
-  color:var(--editor-text);
-  border:1px solid var(--editor-border);
-  border-radius:8px;
-  width:100%; max-width:680px;
-  max-height:88vh;
-  display:flex; flex-direction:column;
-  box-shadow:0 24px 60px rgba(0,0,0,0.35);
-  overflow:hidden;
-}
-
-.editor-header {
-  display:flex; align-items:center; justify-content:space-between;
-  padding:16px 20px;
-  border-bottom:1px solid var(--editor-border);
-  flex-shrink:0;
-}
-.editor-header h3 {
-  font-family:'Playfair Display',serif;
-  font-size:18px; font-weight:700;
-  color:var(--gold);
-}
-.editor-header span {
-  font-size:10px; letter-spacing:1.5px;
-  text-transform:uppercase; color:var(--text-muted);
-  font-weight:500; margin-top:2px; display:block;
-}
-
-.editor-close {
-  background:none; border:none;
-  font-size:20px; cursor:pointer;
-  color:var(--text-muted); padding:4px 8px;
-  border-radius:4px; transition:all 0.2s;
-  line-height:1;
-}
+.editor-modal { background:var(--editor-bg); color:var(--editor-text); border:1px solid var(--editor-border); border-radius:8px; width:100%; max-width:680px; max-height:88vh; display:flex; flex-direction:column; box-shadow:0 24px 60px rgba(0,0,0,0.35); overflow:hidden; }
+.editor-header { display:flex; align-items:center; justify-content:space-between; padding:16px 20px; border-bottom:1px solid var(--editor-border); flex-shrink:0; }
+.editor-header h3 { font-family:'Playfair Display',serif; font-size:18px; font-weight:700; color:var(--gold); }
+.editor-header span { font-size:10px; letter-spacing:1.5px; text-transform:uppercase; color:var(--text-muted); font-weight:500; margin-top:2px; display:block; }
+.editor-close { background:none; border:none; font-size:20px; cursor:pointer; color:var(--text-muted); padding:4px 8px; border-radius:4px; transition:all 0.2s; line-height:1; }
 .editor-close:hover { color:var(--rust); background:rgba(155,74,48,0.1); }
-
-.editor-nav {
-  display:flex; align-items:center; gap:8px;
-  padding:12px 20px;
-  border-bottom:1px solid var(--editor-border);
-  flex-shrink:0; flex-wrap:wrap;
-}
-
-.editor-slide-label {
-  font-size:11px; letter-spacing:1.5px;
-  text-transform:uppercase; color:var(--text-muted);
-  font-weight:600; margin-right:4px;
-}
-
-.editor-slide-btn {
-  background:none; border:1px solid var(--editor-border);
-  color:var(--text-muted); font-size:11px;
-  font-weight:600; cursor:pointer;
-  padding:4px 10px; border-radius:4px;
-  transition:all 0.2s; font-family:'Outfit',sans-serif;
-}
+.editor-nav { display:flex; align-items:center; gap:8px; padding:12px 20px; border-bottom:1px solid var(--editor-border); flex-shrink:0; flex-wrap:wrap; }
+.editor-slide-label { font-size:11px; letter-spacing:1.5px; text-transform:uppercase; color:var(--text-muted); font-weight:600; margin-right:4px; }
+.editor-slide-btn { background:none; border:1px solid var(--editor-border); color:var(--text-muted); font-size:11px; font-weight:600; cursor:pointer; padding:4px 10px; border-radius:4px; transition:all 0.2s; font-family:'Outfit',sans-serif; }
 .editor-slide-btn:hover { border-color:var(--gold); color:var(--gold); }
 .editor-slide-btn.active { background:var(--gold); color:#000; border-color:var(--gold); }
-
-.editor-body {
-  flex:1; overflow-y:auto; padding:16px 20px;
-  display:flex; flex-direction:column; gap:14px;
-}
-
-.editor-field label {
-  display:block; font-size:10px;
-  letter-spacing:1.5px; text-transform:uppercase;
-  color:var(--gold); font-weight:600; margin-bottom:5px;
-}
-.editor-field input,
-.editor-field textarea {
-  width:100%; background:var(--card-bg);
-  border:1px solid var(--editor-border);
-  border-radius:4px; padding:10px 12px;
-  color:var(--editor-text); font-family:'Outfit',sans-serif;
-  font-size:13px; font-weight:300; line-height:1.6;
-  resize:vertical; transition:border-color 0.2s;
-  outline:none;
-}
-.editor-field input:focus,
-.editor-field textarea:focus { border-color:var(--gold); }
+.editor-body { flex:1; overflow-y:auto; padding:16px 20px; display:flex; flex-direction:column; gap:14px; }
+.editor-field label { display:block; font-size:10px; letter-spacing:1.5px; text-transform:uppercase; color:var(--gold); font-weight:600; margin-bottom:5px; }
+.editor-field input, .editor-field textarea { width:100%; background:var(--card-bg); border:1px solid var(--editor-border); border-radius:4px; padding:10px 12px; color:var(--editor-text); font-family:'Outfit',sans-serif; font-size:13px; font-weight:300; line-height:1.6; resize:vertical; transition:border-color 0.2s; outline:none; }
+.editor-field input:focus, .editor-field textarea:focus { border-color:var(--gold); }
 .editor-field textarea { min-height:80px; }
-
-.editor-footer {
-  display:flex; justify-content:flex-end; gap:10px;
-  padding:12px 20px;
-  border-top:1px solid var(--editor-border);
-  flex-shrink:0;
-}
-
-.editor-btn {
-  font-family:'Outfit',sans-serif;
-  font-size:11px; letter-spacing:1.5px;
-  text-transform:uppercase; font-weight:600;
-  padding:8px 18px; border-radius:20px;
-  cursor:pointer; border:1px solid;
-  transition:all 0.2s;
-}
-.editor-btn.primary {
-  background:var(--gold); color:#000;
-  border-color:var(--gold);
-}
+.editor-footer { display:flex; justify-content:space-between; align-items:center; gap:10px; padding:12px 20px; border-top:1px solid var(--editor-border); flex-shrink:0; }
+.editor-save-status { font-size:10px; letter-spacing:1px; text-transform:uppercase; color:var(--text-dim); font-weight:500; }
+.editor-save-status.saving { color:var(--gold); }
+.editor-save-status.saved  { color:#5a9e5a; }
+.editor-save-status.error  { color:var(--rust); }
+.editor-btns { display:flex; gap:10px; }
+.editor-btn { font-family:'Outfit',sans-serif; font-size:11px; letter-spacing:1.5px; text-transform:uppercase; font-weight:600; padding:8px 18px; border-radius:20px; cursor:pointer; border:1px solid; transition:all 0.2s; }
+.editor-btn.primary { background:var(--gold); color:#000; border-color:var(--gold); }
 .editor-btn.primary:hover { background:var(--gold-bright); }
-.editor-btn.secondary {
-  background:none; color:var(--text-muted);
-  border-color:var(--editor-border);
-}
+.editor-btn.secondary { background:none; color:var(--text-muted); border-color:var(--editor-border); }
 .editor-btn.secondary:hover { color:var(--text-main); border-color:var(--text-muted); }
 
 /* ============================================================
    ANIMATIONS
    ============================================================ */
-.slide.active .slide-content > *,
-.slide.active .split-left > *,
-.slide.active .split-right > *,
-.slide.active .grid-2 > *,
-.slide.active .grid-3 > *,
-.slide.active .grid-4 > * {
-  animation: fadeUp 0.55s ease both;
-}
+.slide.active .slide-content > *, .slide.active .split-left > *, .slide.active .split-right > *,
+.slide.active .grid-2 > *, .slide.active .grid-3 > *, .slide.active .grid-4 > * { animation:fadeUp 0.55s ease both; }
 .slide.active .slide-content > *:nth-child(1) { animation-delay:0.08s; }
 .slide.active .slide-content > *:nth-child(2) { animation-delay:0.18s; }
 .slide.active .slide-content > *:nth-child(3) { animation-delay:0.28s; }
@@ -747,13 +425,7 @@ html, body {
 .slide.active .principle:nth-child(1) { animation:fadeUp 0.5s 0.12s ease both; }
 .slide.active .principle:nth-child(2) { animation:fadeUp 0.5s 0.24s ease both; }
 .slide.active .principle:nth-child(3) { animation:fadeUp 0.5s 0.36s ease both; }
-
-@keyframes fadeUp {
-  from { opacity:0; transform:translateY(18px); }
-  to   { opacity:1; transform:translateY(0); }
-}
-
-/* mobile padding adjustments */
+@keyframes fadeUp { from { opacity:0; transform:translateY(18px); } to { opacity:1; transform:translateY(0); } }
 @media (max-width:600px) {
   .slide { padding-bottom:130px; }
   .t-hero { font-size:clamp(36px,11vw,60px); }
@@ -766,12 +438,21 @@ html, body {
 </head>
 <body>
 
+<!-- LOADING OVERLAY -->
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="loading-spinner"></div>
+  <div class="loading-text">Loading content…</div>
+</div>
+
 <div class="title-badge" id="titleBadge">
   <span class="title-badge-main" id="badgeTitle">Don't Come Empty</span>
   <span class="title-badge-name" id="badgeName">Facilitated by Antone Holmes</span>
 </div>
 <div class="lock-indicator" id="lockIndicator">🔒 Facilitator Mode</div>
-<div class="key-hint">← → Keys · Swipe</div>
+<div class="sync-badge" id="syncBadge">
+  <div class="sync-dot" id="syncDot"></div>
+  <span id="syncLabel">Connecting…</span>
+</div>
 
 <!-- ============================================================
      SLIDES
@@ -919,11 +600,9 @@ html, body {
     <div class="glow-bottom-left"></div>
     <div class="slide-content">
       <div class="section-badge" data-editable="s6-badge">Proverbs 3:9–10</div>
-      <div class="anchor-quote" data-editable="s6-quote">
-        "Honor the LORD with your <em>wealth</em> and with the firstfruits of all your produce; then your barns will be filled with plenty."
-      </div>
+      <div class="anchor-quote" data-editable="s6-quote">"Honor the LORD with your <em>wealth</em> and with the firstfruits of all your produce; then your barns will be filled with plenty."</div>
       <div class="deco-line" style="margin-top:6px;"></div>
-      <p class="t-body" style="text-align:center;margin-top:4px;" data-editable="s6-body">The Hebrew word <span class="kw">hon (הוֹן)</span> — translated "wealth" — is a broad term for substance in whatever form it takes. Solomon used it intentionally. <strong>Honor God with your substance, regardless of its form.</strong></p>
+      <p class="t-body" style="text-align:center;margin-top:6px;" data-editable="s6-body">The Hebrew word <span class="kw">hon (הוֹן)</span> — translated "wealth" — is a broad term for substance in whatever form it takes. Solomon used it intentionally. <strong>Honor God with your substance, regardless of its form.</strong></p>
       <span class="t-ref" data-editable="s6-ref">Proverbs 3:9 · 1 Chronicles 29:14</span>
     </div>
   </div>
@@ -1068,9 +747,7 @@ html, body {
     <div class="glow-bottom-left"></div>
     <div class="slide-content">
       <div class="overline" data-editable="s12-overline">Closing Charge</div>
-      <div class="anchor-quote" data-editable="s12-quote">
-        "You are here.<br>You showed up.<br>That matters.<br><em>But what did you bring with you?"</em>
-      </div>
+      <div class="anchor-quote" data-editable="s12-quote">"You are here.<br>You showed up.<br>That matters.<br><em>But what did you bring with you?"</em></div>
       <div class="deco-line" style="margin-top:10px;"></div>
       <p class="t-body" style="text-align:center;margin-top:6px;" data-editable="s12-body">Not to produce guilt — but to produce reflection. What your hands carry when you appear before God is a statement about what you believe about Him.</p>
       <div class="final-grid">
@@ -1084,56 +761,41 @@ html, body {
 
 </div><!-- /deck -->
 
-<!-- ============================================================
-     EDITOR MODAL
-     ============================================================ -->
+<!-- EDITOR MODAL -->
 <div class="editor-overlay" id="editorOverlay">
   <div class="editor-modal">
     <div class="editor-header">
-      <div>
-        <h3>Slide Editor</h3>
-        <span id="editorSlideLabel">Editing Slide 1</span>
-      </div>
+      <div><h3>Slide Editor</h3><span id="editorSlideLabel">Editing Slide 1</span></div>
       <button class="editor-close" onclick="closeEditor()">✕</button>
     </div>
-    <div class="editor-nav" id="editorNav">
-      <span class="editor-slide-label">Slide:</span>
-    </div>
+    <div class="editor-nav" id="editorNav"></div>
     <div class="editor-body" id="editorBody"></div>
     <div class="editor-footer">
-      <button class="editor-btn secondary" onclick="closeEditor()">Cancel</button>
-      <button class="editor-btn primary" onclick="applyEdits()">Apply Changes</button>
+      <span class="editor-save-status" id="saveStatus"></span>
+      <div class="editor-btns">
+        <button class="editor-btn secondary" onclick="closeEditor()">Cancel</button>
+        <button class="editor-btn primary" onclick="applyEdits()">Apply &amp; Save</button>
+      </div>
     </div>
   </div>
 </div>
 
-<!-- ============================================================
-     BOTTOM CHROME
-     ============================================================ -->
+<!-- BOTTOM CHROME -->
 <div class="bottom-chrome">
-  <!-- Dots -->
   <div class="dots-row" id="dots"></div>
-  <!-- Nav + Controls -->
   <div class="nav-row">
     <div class="nav-pill">
       <button class="nav-btn" onclick="navigate(-1)">
-        <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
-        Prev
+        <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>Prev
       </button>
       <span class="slide-counter" id="counter">1 / 13</span>
       <button class="nav-btn" id="nextBtn" onclick="navigate(1)">
-        Next
-        <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+        Next<svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
       </button>
     </div>
     <div class="ctrl-pill">
-      <!-- Theme toggle -->
-      <button class="icon-btn" id="themeBtn" onclick="toggleTheme()" title="Toggle light/dark">
-        <span id="themeIcon">🌙</span>
-      </button>
-      <!-- Slide lock (presenter-only, PIN gated) -->
+      <button class="icon-btn" id="themeBtn" onclick="toggleTheme()" title="Toggle light/dark"><span id="themeIcon">🌙</span></button>
       <button class="icon-btn" id="lockBtn" onclick="promptLockPin()" title="Toggle facilitator lock">🎓</button>
-      <!-- Editor (presenter-only, PIN gated) -->
       <button class="icon-btn" onclick="promptPin()" title="Edit slide content">🖊️</button>
     </div>
   </div>
@@ -1143,18 +805,159 @@ html, body {
      SCRIPT
      ============================================================ -->
 <script>
-const TOTAL = 13;
-let current = 0;
-let isDark = false;
+/* ============================================================
+   CONFIG
+   ============================================================ */
+const TOTAL      = 13;
+const ABLY_KEY   = 'Wb8VkQ.4EToWQ:Ref9ahu7QBsNeuTdutlCEXSZ6HR-dSFmpLuvNbS-uag';
+const CHANNEL_NAME = 'vow-teaching-dont-come-empty';
+const EDITOR_PIN = '2408';
 
-/* ---------- THEME ---------- */
+/* ============================================================
+   STATE
+   ============================================================ */
+let current          = 0;
+let isDark           = false;
+let slideLocked      = false;
+let lockCeiling      = 0;
+let lockPinVerified  = false;
+let presenterUnlocked = false;
+let isPresenter      = false;   // set to true after PIN auth
+let ablyChannel      = null;
+let notionContent    = {};      // { slide_key: content }
+
+/* ============================================================
+   NOTION — load content on startup
+   ============================================================ */
+async function loadNotionContent() {
+  try {
+    const res = await fetch('/api/slides');
+    if (!res.ok) throw new Error('fetch failed');
+    notionContent = await res.json();
+    applyNotionContent();
+  } catch (e) {
+    console.warn('Notion load failed, using defaults:', e);
+  } finally {
+    hideLoading();
+  }
+}
+
+function applyNotionContent() {
+  Object.entries(notionContent).forEach(([key, value]) => {
+    if (!value) return;
+    const el = document.querySelector(`[data-editable="${key}"]`);
+    if (!el) return;
+    const hasEm = el.querySelector('em');
+    if (hasEm) {
+      const lines = value.split('\n').filter(l => l.trim());
+      if (lines.length >= 2) {
+        el.innerHTML = lines[0] + '<br><em>' + lines.slice(1).join(' ') + '</em>';
+      } else { el.textContent = value; }
+    } else {
+      el.textContent = value;
+    }
+  });
+  // Sync badge
+  const heroEl = document.querySelector('[data-editable="s0-hero"]');
+  if (heroEl) document.getElementById('badgeTitle').textContent = heroEl.innerText.replace(/\n/g,' ').trim();
+  const facEl = document.querySelector('[data-editable="s0-facilitator"]');
+  if (facEl) document.getElementById('badgeName').textContent = facEl.innerText.trim();
+}
+
+async function saveFieldToNotion(key, value) {
+  try {
+    const res = await fetch('/api/slides', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ slide_key: key, content: value }),
+    });
+    if (!res.ok) throw new Error('save failed');
+    notionContent[key] = value;
+    return true;
+  } catch (e) {
+    console.error('Notion save error:', e);
+    return false;
+  }
+}
+
+function hideLoading() {
+  const lo = document.getElementById('loadingOverlay');
+  lo.classList.add('hidden');
+  setTimeout(() => lo.style.display = 'none', 600);
+}
+
+/* ============================================================
+   ABLY — real-time sync
+   ============================================================ */
+function initAbly() {
+  const client = new Ably.Realtime({ key: ABLY_KEY });
+  ablyChannel  = client.channels.get(CHANNEL_NAME);
+
+  client.connection.on('connected', () => setSyncStatus('connected', 'Live'));
+  client.connection.on('disconnected', () => setSyncStatus('', 'Offline'));
+  client.connection.on('failed', () => setSyncStatus('', 'Offline'));
+
+  // Listen for presenter broadcasts
+  ablyChannel.subscribe('presenter-state', (msg) => {
+    if (isPresenter) return; // presenter ignores own echoes
+    const { slide, locked, ceiling, content } = msg.data;
+
+    // Apply any content updates broadcast by presenter
+    if (content) {
+      Object.entries(content).forEach(([key, val]) => {
+        notionContent[key] = val;
+        const el = document.querySelector(`[data-editable="${key}"]`);
+        if (el) el.textContent = val;
+      });
+    }
+
+    // Apply lock state
+    slideLocked  = locked;
+    lockCeiling  = ceiling;
+
+    // Follow slide
+    if (locked) {
+      goTo(slide);
+    } else {
+      // Unlocked — just update ceiling, don't force navigation
+      lockCeiling = TOTAL - 1;
+      updateLockUI();
+    }
+
+    // Update following indicator
+    setSyncStatus('following', 'Following');
+  });
+}
+
+function setSyncStatus(dotClass, label) {
+  const dot = document.getElementById('syncDot');
+  const lbl = document.getElementById('syncLabel');
+  dot.className = 'sync-dot' + (dotClass ? ' ' + dotClass : '');
+  lbl.textContent = label;
+}
+
+function broadcastState(contentUpdate = null) {
+  if (!ablyChannel || !isPresenter) return;
+  ablyChannel.publish('presenter-state', {
+    slide:   current,
+    locked:  slideLocked,
+    ceiling: lockCeiling,
+    content: contentUpdate || null,
+  });
+}
+
+/* ============================================================
+   THEME
+   ============================================================ */
 function toggleTheme() {
   isDark = !isDark;
   document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
   document.getElementById('themeIcon').textContent = isDark ? '☀️' : '🌙';
 }
 
-/* ---------- NAVIGATION ---------- */
+/* ============================================================
+   NAVIGATION
+   ============================================================ */
 const dotsEl = document.getElementById('dots');
 for (let i = 0; i < TOTAL; i++) {
   const d = document.createElement('div');
@@ -1163,85 +966,71 @@ for (let i = 0; i < TOTAL; i++) {
   dotsEl.appendChild(d);
 }
 
-/* ---------- LOCK STATE ---------- */
-let slideLocked = false;      // is lock active?
-let lockCeiling = 0;          // furthest slide students may reach
-let lockPinVerified = false;  // presenter authenticated for lock toggle?
-
 function goTo(n) {
-  // Enforce ceiling when locked — only block forward movement
   const target = Math.max(0, Math.min(TOTAL - 1, n));
-  if (slideLocked && target > lockCeiling) return; // silent block
+  if (slideLocked && target > lockCeiling) return;
   document.getElementById('slide-' + current).classList.remove('active');
   dotsEl.children[current].classList.remove('active');
   current = target;
   document.getElementById('slide-' + current).classList.add('active');
   dotsEl.children[current].classList.add('active');
   document.getElementById('counter').textContent = (current + 1) + ' / ' + TOTAL;
-  // Show facilitator name in badge from slide 2 onward
   const nameBadge = document.getElementById('badgeName');
   current === 0 ? nameBadge.classList.remove('visible') : nameBadge.classList.add('visible');
-  // Refresh lock UI on every navigation
   updateLockUI();
 }
 
 function navigate(dir) { goTo(current + dir); }
 
+function presenterAdvance(dir) {
+  if (!isPresenter) { navigate(dir); return; }
+  if (slideLocked && dir > 0) lockCeiling = Math.min(TOTAL - 1, current + 1);
+  goTo(current + dir);
+  broadcastState();
+}
+
+document.addEventListener('keydown', e => {
+  if (document.getElementById('editorOverlay').classList.contains('open')) return;
+  if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === ' ') { e.preventDefault(); presenterAdvance(1); }
+  if (e.key === 'ArrowLeft'  || e.key === 'ArrowUp')   { e.preventDefault(); presenterAdvance(-1); }
+  if (e.key === 'Escape') closeEditor();
+});
+
+let touchX = 0;
+document.addEventListener('touchstart', e => touchX = e.touches[0].clientX, {passive:true});
+document.addEventListener('touchend', e => {
+  if (document.getElementById('editorOverlay').classList.contains('open')) return;
+  const dx = e.changedTouches[0].clientX - touchX;
+  if (Math.abs(dx) > 48) { dx < 0 ? presenterAdvance(1) : presenterAdvance(-1); }
+});
+
+/* ============================================================
+   LOCK
+   ============================================================ */
 function updateLockUI() {
-  const nextBtn = document.getElementById('nextBtn');
+  const nextBtn   = document.getElementById('nextBtn');
   const indicator = document.getElementById('lockIndicator');
-  const lockBtn = document.getElementById('lockBtn');
+  const lockBtn   = document.getElementById('lockBtn');
   if (slideLocked) {
-    // Show indicator bar
     indicator.classList.add('visible');
-    // Dim Next and dots beyond ceiling
     nextBtn.classList.toggle('blocked', current >= lockCeiling);
-    // Dim dots that are beyond ceiling
-    Array.from(dotsEl.children).forEach((d, i) => {
-      d.classList.toggle('blocked', i > lockCeiling);
-    });
-    lockBtn.textContent = '🎓';
-    lockBtn.title = 'Unlock deck (presenter)';
+    Array.from(dotsEl.children).forEach((d,i) => d.classList.toggle('blocked', i > lockCeiling));
+    lockBtn.title = 'Unlock deck';
   } else {
     indicator.classList.remove('visible');
     nextBtn.classList.remove('blocked');
     Array.from(dotsEl.children).forEach(d => d.classList.remove('blocked'));
-    lockBtn.textContent = '🎓';
-    lockBtn.title = 'Lock deck (presenter)';
+    lockBtn.title = 'Lock deck';
   }
 }
 
-/* ---------- LOCK PIN GATE ---------- */
 function promptLockPin() {
   if (lockPinVerified) { toggleLock(); return; }
-  // Reuse same PIN as editor
-  const overlay = document.createElement('div');
-  overlay.id = 'lockPinOverlay';
-  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.65);z-index:600;display:flex;align-items:center;justify-content:center;';
-  overlay.innerHTML = `
-    <div style="background:var(--editor-bg);color:var(--editor-text);border:1px solid var(--editor-border);border-radius:8px;padding:32px 28px;width:280px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.4);">
-      <div style="font-size:32px;margin-bottom:10px;">🎓</div>
-      <div style="font-family:'Playfair Display',serif;font-size:20px;font-weight:700;color:var(--gold);margin-bottom:6px;">Classroom Control</div>
-      <div style="font-size:12px;letter-spacing:1px;color:var(--text-muted);margin-bottom:20px;text-transform:uppercase;">Enter PIN to manage lock</div>
-      <input id="lockPinInput" type="password" maxlength="8" inputmode="numeric"
-        style="width:100%;background:var(--card-bg);border:1px solid var(--editor-border);border-radius:4px;padding:10px 14px;color:var(--editor-text);font-size:20px;letter-spacing:8px;text-align:center;outline:none;font-family:'Outfit',sans-serif;"
-        placeholder="····" autofocus />
-      <div id="lockPinError" style="color:#c0392b;font-size:12px;margin-top:8px;min-height:16px;"></div>
-      <div style="display:flex;gap:10px;margin-top:16px;">
-        <button onclick="document.getElementById('lockPinOverlay').remove()"
-          style="flex:1;background:none;border:1px solid var(--editor-border);color:var(--text-muted);border-radius:20px;padding:8px;font-family:'Outfit',sans-serif;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;font-weight:600;cursor:pointer;">
-          Cancel
-        </button>
-        <button onclick="checkLockPin()"
-          style="flex:1;background:var(--gold);border:1px solid var(--gold);color:#000;border-radius:20px;padding:8px;font-family:'Outfit',sans-serif;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;font-weight:600;cursor:pointer;">
-          Confirm
-        </button>
-      </div>
-    </div>`;
-  document.body.appendChild(overlay);
-  setTimeout(() => document.getElementById('lockPinInput').focus(), 80);
-  document.getElementById('lockPinInput').addEventListener('keydown', e => {
-    if (e.key === 'Enter') checkLockPin();
+  showPinModal({
+    id: 'lockPinOverlay', icon: '🎓', title: 'Classroom Control',
+    sub: 'Enter PIN to manage lock',
+    inputId: 'lockPinInput', errorId: 'lockPinError',
+    onConfirm: checkLockPin,
   });
 }
 
@@ -1249,10 +1038,11 @@ function checkLockPin() {
   const val = document.getElementById('lockPinInput').value;
   if (val === EDITOR_PIN) {
     lockPinVerified = true;
+    isPresenter     = true;
     document.getElementById('lockPinOverlay').remove();
     toggleLock();
   } else {
-    document.getElementById('lockPinError').textContent = 'Incorrect PIN. Try again.';
+    document.getElementById('lockPinError').textContent = 'Incorrect PIN.';
     document.getElementById('lockPinInput').value = '';
     document.getElementById('lockPinInput').focus();
   }
@@ -1260,90 +1050,22 @@ function checkLockPin() {
 
 function toggleLock() {
   slideLocked = !slideLocked;
-  if (slideLocked) {
-    // Set ceiling to current slide when locking
-    lockCeiling = current;
-  }
+  if (slideLocked) lockCeiling = current;
+  else lockCeiling = TOTAL - 1;
   updateLockUI();
+  broadcastState();
 }
 
-// When presenter advances their own slide while locked,
-// the ceiling rises with them automatically
-const _origGoTo = goTo;
-document.addEventListener('keydown', e => {
-  if (document.getElementById('editorOverlay').classList.contains('open')) return;
-  if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === ' ') { e.preventDefault(); presenterAdvance(1); }
-  if (e.key === 'ArrowLeft'  || e.key === 'ArrowUp')   { e.preventDefault(); navigate(-1); }
-  if (e.key === 'Escape') closeEditor();
-});
-
-// Presenter advance: raises ceiling if locked
-function presenterAdvance(dir) {
-  if (slideLocked && dir > 0) {
-    lockCeiling = Math.min(TOTAL - 1, current + 1);
-  }
-  goTo(current + dir);
-}
-
-let touchX = 0;
-document.addEventListener('touchstart', e => touchX = e.touches[0].clientX, {passive:true});
-document.addEventListener('touchend', e => {
-  if (document.getElementById('editorOverlay').classList.contains('open')) return;
-  const dx = e.changedTouches[0].clientX - touchX;
-  if (Math.abs(dx) > 48) {
-    if (dx < 0) presenterAdvance(1);
-    else navigate(-1);
-  }
-});
-
-
-/* ---------- EDITOR ---------- */
-// Collect all editable elements and build a map
-function getEditables(slideIndex) {
-  const slide = document.getElementById('slide-' + slideIndex);
-  if (!slide) return [];
-  return Array.from(slide.querySelectorAll('[data-editable]')).map(el => ({
-    key: el.getAttribute('data-editable'),
-    el,
-    label: el.getAttribute('data-editable').replace(/^s\d+-/, '').replace(/-/g,' ').replace(/\b\w/g,c=>c.toUpperCase()),
-    isMultiline: el.tagName === 'P' || el.tagName === 'DIV' || el.classList.contains('t-scripture') || el.classList.contains('anchor-quote')
-  }));
-}
-
-/* ---------- PIN GATE ---------- */
-const EDITOR_PIN = '2408'; // change this to your preferred PIN
-let presenterUnlocked = false;
-
+/* ============================================================
+   EDITOR PIN
+   ============================================================ */
 function promptPin() {
   if (presenterUnlocked) { openEditor(); return; }
-  // Build a minimal inline PIN modal
-  const overlay = document.createElement('div');
-  overlay.id = 'pinOverlay';
-  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.65);z-index:600;display:flex;align-items:center;justify-content:center;';
-  overlay.innerHTML = `
-    <div style="background:var(--editor-bg);color:var(--editor-text);border:1px solid var(--editor-border);border-radius:8px;padding:32px 28px;width:280px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.4);">
-      <div style="font-size:32px;margin-bottom:10px;">🖊️</div>
-      <div style="font-family:'Playfair Display',serif;font-size:20px;font-weight:700;color:var(--gold);margin-bottom:6px;">Edit Content</div>
-      <div style="font-size:12px;letter-spacing:1px;color:var(--text-muted);margin-bottom:20px;text-transform:uppercase;">Enter PIN to edit slides</div>
-      <input id="pinInput" type="password" maxlength="8" inputmode="numeric"
-        style="width:100%;background:var(--card-bg);border:1px solid var(--editor-border);border-radius:4px;padding:10px 14px;color:var(--editor-text);font-size:20px;letter-spacing:8px;text-align:center;outline:none;font-family:'Outfit',sans-serif;"
-        placeholder="····" autofocus />
-      <div id="pinError" style="color:#c0392b;font-size:12px;margin-top:8px;min-height:16px;"></div>
-      <div style="display:flex;gap:10px;margin-top:16px;">
-        <button onclick="document.getElementById('pinOverlay').remove()"
-          style="flex:1;background:none;border:1px solid var(--editor-border);color:var(--text-muted);border-radius:20px;padding:8px;font-family:'Outfit',sans-serif;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;font-weight:600;cursor:pointer;">
-          Cancel
-        </button>
-        <button onclick="checkPin()"
-          style="flex:1;background:var(--gold);border:1px solid var(--gold);color:#000;border-radius:20px;padding:8px;font-family:'Outfit',sans-serif;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;font-weight:600;cursor:pointer;">
-          Confirm
-        </button>
-      </div>
-    </div>`;
-  document.body.appendChild(overlay);
-  setTimeout(() => document.getElementById('pinInput').focus(), 80);
-  document.getElementById('pinInput').addEventListener('keydown', e => {
-    if (e.key === 'Enter') checkPin();
+  showPinModal({
+    id: 'pinOverlay', icon: '🖊️', title: 'Edit Content',
+    sub: 'Enter PIN to edit slides',
+    inputId: 'pinInput', errorId: 'pinError',
+    onConfirm: checkPin,
   });
 }
 
@@ -1351,23 +1073,63 @@ function checkPin() {
   const val = document.getElementById('pinInput').value;
   if (val === EDITOR_PIN) {
     presenterUnlocked = true;
-    // Swap to open editor icon
+    isPresenter       = true;
     document.querySelector('[onclick="promptPin()"]').textContent = '✏️';
     document.getElementById('pinOverlay').remove();
     openEditor();
   } else {
-    document.getElementById('pinError').textContent = 'Incorrect PIN. Try again.';
+    document.getElementById('pinError').textContent = 'Incorrect PIN.';
     document.getElementById('pinInput').value = '';
     document.getElementById('pinInput').focus();
   }
 }
 
+/* ============================================================
+   PIN MODAL HELPER — shared builder for both modals
+   ============================================================ */
+function showPinModal({ id, icon, title, sub, inputId, errorId, onConfirm }) {
+  const overlay = document.createElement('div');
+  overlay.id = id;
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.65);z-index:600;display:flex;align-items:center;justify-content:center;';
+  overlay.innerHTML = `
+    <div style="background:var(--editor-bg);color:var(--editor-text);border:1px solid var(--editor-border);border-radius:8px;padding:32px 28px;width:280px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.4);">
+      <div style="font-size:32px;margin-bottom:10px;">${icon}</div>
+      <div style="font-family:'Playfair Display',serif;font-size:20px;font-weight:700;color:var(--gold);margin-bottom:6px;">${title}</div>
+      <div style="font-size:12px;letter-spacing:1px;color:var(--text-muted);margin-bottom:20px;text-transform:uppercase;">${sub}</div>
+      <input id="${inputId}" type="password" maxlength="8" inputmode="numeric"
+        style="width:100%;background:var(--card-bg);border:1px solid var(--editor-border);border-radius:4px;padding:10px 14px;color:var(--editor-text);font-size:20px;letter-spacing:8px;text-align:center;outline:none;font-family:'Outfit',sans-serif;"
+        placeholder="····" autofocus />
+      <div id="${errorId}" style="color:#c0392b;font-size:12px;margin-top:8px;min-height:16px;"></div>
+      <div style="display:flex;gap:10px;margin-top:16px;">
+        <button onclick="document.getElementById('${id}').remove()"
+          style="flex:1;background:none;border:1px solid var(--editor-border);color:var(--text-muted);border-radius:20px;padding:8px;font-family:'Outfit',sans-serif;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;font-weight:600;cursor:pointer;">Cancel</button>
+        <button onclick="${onConfirm.name}()"
+          style="flex:1;background:var(--gold);border:1px solid var(--gold);color:#000;border-radius:20px;padding:8px;font-family:'Outfit',sans-serif;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;font-weight:600;cursor:pointer;">Confirm</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+  setTimeout(() => document.getElementById(inputId).focus(), 80);
+  document.getElementById(inputId).addEventListener('keydown', e => { if (e.key === 'Enter') onConfirm(); });
+}
+
+/* ============================================================
+   EDITOR
+   ============================================================ */
 let editorSlide = 0;
-let pendingEdits = {}; // { key: innerHTML }
+
+function getEditables(slideIndex) {
+  const slide = document.getElementById('slide-' + slideIndex);
+  if (!slide) return [];
+  return Array.from(slide.querySelectorAll('[data-editable]')).map(el => ({
+    key: el.getAttribute('data-editable'),
+    el,
+    label: el.getAttribute('data-editable').replace(/^s\d+-/,'').replace(/-/g,' ').replace(/\b\w/g,c=>c.toUpperCase()),
+    isMultiline: el.tagName==='P'||el.tagName==='DIV'||el.classList.contains('t-scripture')||el.classList.contains('anchor-quote'),
+  }));
+}
 
 function openEditor() {
   editorSlide = current;
-  pendingEdits = {};
   renderEditorNav();
   renderEditorBody(editorSlide);
   document.getElementById('editorOverlay').classList.add('open');
@@ -1375,7 +1137,7 @@ function openEditor() {
 
 function closeEditor() {
   document.getElementById('editorOverlay').classList.remove('open');
-  pendingEdits = {};
+  document.getElementById('saveStatus').textContent = '';
 }
 
 function renderEditorNav() {
@@ -1385,11 +1147,7 @@ function renderEditorNav() {
     const btn = document.createElement('button');
     btn.className = 'editor-slide-btn' + (i === editorSlide ? ' active' : '');
     btn.textContent = i + 1;
-    btn.onclick = () => {
-      editorSlide = i;
-      renderEditorNav();
-      renderEditorBody(i);
-    };
+    btn.onclick = () => { editorSlide = i; renderEditorNav(); renderEditorBody(i); };
     nav.appendChild(btn);
   }
 }
@@ -1399,7 +1157,7 @@ function renderEditorBody(slideIdx) {
   const body = document.getElementById('editorBody');
   body.innerHTML = '';
   const editables = getEditables(slideIdx);
-  if (editables.length === 0) {
+  if (!editables.length) {
     body.innerHTML = '<p style="color:var(--text-muted);font-size:13px;padding:8px 0;">No editable fields on this slide.</p>';
     return;
   }
@@ -1410,8 +1168,6 @@ function renderEditorBody(slideIdx) {
     lbl.textContent = label;
     field.appendChild(lbl);
     let input;
-    // Sanitize innerHTML to plain text for editing (strip tags for simple fields)
-    const rawHTML = el.innerHTML;
     const plain = el.innerText || el.textContent;
     if (isMultiline) {
       input = document.createElement('textarea');
@@ -1423,49 +1179,68 @@ function renderEditorBody(slideIdx) {
       input.value = plain;
     }
     input.setAttribute('data-edit-key', key);
-    input.setAttribute('data-multiline', isMultiline ? '1' : '0');
     field.appendChild(input);
     body.appendChild(field);
   });
 }
 
-function applyEdits() {
+async function applyEdits() {
+  const status = document.getElementById('saveStatus');
+  status.textContent = 'Saving…'; status.className = 'editor-save-status saving';
+
   const inputs = document.querySelectorAll('#editorBody [data-edit-key]');
+  const updates = {};
+  const savePromises = [];
+
   inputs.forEach(input => {
     const key = input.getAttribute('data-edit-key');
-    const el = document.querySelector('[data-editable="' + key + '"]');
+    const el  = document.querySelector(`[data-editable="${key}"]`);
     if (!el) return;
     const val = input.value;
+    updates[key] = val;
+
+    // Apply to DOM
     const hasEm = el.querySelector('em');
     if (hasEm) {
       const lines = val.split('\n').filter(l => l.trim());
-      if (lines.length >= 2) {
-        el.innerHTML = lines[0] + '<br><em>' + lines.slice(1).join(' ') + '</em>';
-      } else {
-        el.textContent = val;
-      }
-    } else {
-      el.textContent = val;
-    }
+      el.innerHTML = lines.length >= 2
+        ? lines[0] + '<br><em>' + lines.slice(1).join(' ') + '</em>'
+        : val;
+    } else { el.textContent = val; }
+
+    savePromises.push(saveFieldToNotion(key, val));
   });
-  // Sync top-left badge with slide 1 edits
+
+  // Sync badge
   const heroEl = document.querySelector('[data-editable="s0-hero"]');
-  if (heroEl) {
-    document.getElementById('badgeTitle').textContent =
-      heroEl.innerText.replace(/\n/g, ' ').trim();
+  if (heroEl) document.getElementById('badgeTitle').textContent = heroEl.innerText.replace(/\n/g,' ').trim();
+  const facEl = document.querySelector('[data-editable="s0-facilitator"]');
+  if (facEl) document.getElementById('badgeName').textContent = facEl.innerText.trim();
+
+  // Save all to Notion in parallel
+  const results = await Promise.all(savePromises);
+  const allOk = results.every(Boolean);
+
+  if (allOk) {
+    status.textContent = '✓ Saved to Notion'; status.className = 'editor-save-status saved';
+    // Broadcast content update to students via Ably
+    broadcastState(updates);
+  } else {
+    status.textContent = '⚠ Some saves failed'; status.className = 'editor-save-status error';
   }
-  const facilitatorEl = document.querySelector('[data-editable="s0-facilitator"]');
-  if (facilitatorEl) {
-    document.getElementById('badgeName').textContent =
-      facilitatorEl.innerText.trim();
-  }
-  closeEditor();
+
+  setTimeout(() => { status.textContent = ''; }, 3000);
 }
 
-// Close on overlay background click
 document.getElementById('editorOverlay').addEventListener('click', function(e) {
   if (e.target === this) closeEditor();
 });
+
+/* ============================================================
+   STARTUP
+   ============================================================ */
+initAbly();
+loadNotionContent();
 </script>
 </body>
 </html>
