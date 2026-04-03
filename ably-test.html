@@ -6,74 +6,89 @@
 <title>Ably Test</title>
 <script src="https://cdn.ably.com/lib/ably.min-2.js"></script>
 <style>
-  body { font-family: monospace; padding: 20px; max-width: 600px; margin: 0 auto; }
-  h2 { font-size: 16px; }
-  #log { background: #f4f4f4; padding: 12px; border-radius: 4px; min-height: 120px; font-size: 13px; white-space: pre-wrap; }
-  button { margin: 6px 4px; padding: 8px 16px; font-size: 13px; cursor: pointer; }
-  .status { font-size: 13px; margin: 8px 0; }
-  .ok  { color: green; }
-  .err { color: red; }
+  body { font-family: monospace; padding: 20px; max-width: 600px; margin: 0 auto; background: #f9f9f9; }
+  h2 { font-size: 15px; margin: 16px 0 6px; }
+  #log { background: #fff; border: 1px solid #ddd; padding: 12px; border-radius: 4px; min-height: 160px; font-size: 12px; white-space: pre-wrap; overflow-y: auto; max-height: 300px; }
+  button { margin: 6px 4px; padding: 10px 18px; font-size: 13px; cursor: pointer; border-radius: 4px; border: 1px solid #ccc; background: #fff; }
+  button:active { background: #eee; }
+  .status { font-size: 13px; margin: 8px 0; padding: 8px 12px; border-radius: 4px; background: #fff; border: 1px solid #ddd; }
+  .ok   { border-color: green; color: green; }
+  .err  { border-color: red;   color: red;   }
+  .warn { border-color: orange; color: orange; }
 </style>
 </head>
 <body>
-<h2>Ably Connection Test</h2>
-<p class="status" id="connStatus">Connecting…</p>
+<h2>Connection</h2>
+<p class="status" id="connStatus">Connecting to Ably…</p>
+<p class="status" id="chanStatus">Channel: waiting…</p>
+
+<h2>Actions</h2>
 <button onclick="sendTest()">📤 Send Test Message</button>
-<button onclick="clearLog()">Clear</button>
-<h2>Message Log</h2>
-<div id="log">Waiting…</div>
+<button onclick="clearLog()">🗑 Clear Log</button>
+
+<h2>Event Log</h2>
+<div id="log">Starting…</div>
 
 <script>
-const ABLY_KEY     = 'Wb8VkQ.4EToWQ:Ref9ahu7QBsNeuTdutlCEXSZ6HR-dSFmpLuvNbS-uag';
+const ABLY_KEY     = 'Wb8VkQ.hMB4Uw:--Zjo6dnCkWVZE2UsQY30x6LhLtf4pQh0yJ3R86SySE';
 const CHANNEL_NAME = 'vow-teaching-dont-come-empty';
+const clientId     = 'test-' + Math.random().toString(36).slice(2,7);
 let channel;
 
 function log(msg) {
   const el = document.getElementById('log');
   const ts = new Date().toLocaleTimeString();
-  el.textContent = `[${ts}] ${msg}\n` + el.textContent;
+  el.textContent = '[' + ts + '] ' + msg + '\n' + el.textContent;
+}
+function clearLog() { document.getElementById('log').textContent = ''; }
+function setConn(msg, cls) {
+  const el = document.getElementById('connStatus');
+  el.textContent = msg; el.className = 'status ' + cls;
+}
+function setChan(msg, cls) {
+  const el = document.getElementById('chanStatus');
+  el.textContent = msg; el.className = 'status ' + cls;
 }
 
-function clearLog() { document.getElementById('log').textContent = ''; }
+log('ClientId: ' + clientId);
 
-const client = new Ably.Realtime({ key: ABLY_KEY });
+const client = new Ably.Realtime({ key: ABLY_KEY, clientId });
 
-client.connection.on('connected', () => {
-  document.getElementById('connStatus').textContent = '✅ Connected to Ably';
-  document.getElementById('connStatus').className = 'status ok';
-  log('CONNECTION: established');
-});
-
-client.connection.on('failed', (err) => {
-  document.getElementById('connStatus').textContent = '❌ Connection failed: ' + (err?.reason?.message || 'unknown');
-  document.getElementById('connStatus').className = 'status err';
-  log('CONNECTION FAILED: ' + JSON.stringify(err?.reason));
-});
-
-client.connection.on('disconnected', () => {
-  document.getElementById('connStatus').textContent = '⚠️ Disconnected';
-  log('DISCONNECTED');
+client.connection.on('connecting',    () => { setConn('Connecting…', ''); });
+client.connection.on('connected',     () => { setConn('✅ Connected (clientId: ' + clientId + ')', 'ok'); log('Connected'); });
+client.connection.on('disconnected',  () => { setConn('⚠️ Disconnected', 'warn'); log('Disconnected'); });
+client.connection.on('suspended',     () => { setConn('⚠️ Suspended', 'warn'); log('Suspended'); });
+client.connection.on('failed',  (err) => {
+  setConn('❌ Failed: ' + (err?.reason?.message || JSON.stringify(err)), 'err');
+  log('FAILED: ' + JSON.stringify(err?.reason || err));
 });
 
 channel = client.channels.get(CHANNEL_NAME);
 
-channel.subscribe((msg) => {
-  log(`RECEIVED [${msg.name}]: ${JSON.stringify(msg.data)}`);
-});
-
+channel.on('attached',  () => { setChan('✅ Channel attached: ' + CHANNEL_NAME, 'ok'); log('Channel attached'); });
 channel.on('failed', (err) => {
+  setChan('❌ Channel failed: ' + JSON.stringify(err), 'err');
   log('CHANNEL FAILED: ' + JSON.stringify(err));
+});
+channel.on('suspended', () => { setChan('⚠️ Channel suspended', 'warn'); log('Channel suspended'); });
+
+channel.subscribe((msg) => {
+  log('RECEIVED [' + msg.name + '] from ' + (msg.clientId||'unknown') + ': ' + JSON.stringify(msg.data));
 });
 
 function sendTest() {
+  if (!channel) { log('ERROR: channel not initialized'); return; }
+  log('Publishing test-ping…');
   channel.publish('test-ping', {
-    msg: 'hello from ' + (window.location.hostname || 'browser'),
-    ts: Date.now()
+    from: clientId,
+    msg:  'hello from ' + clientId,
+    ts:   Date.now()
   }, (err) => {
     if (err) {
-      log('PUBLISH ERROR: ' + err.message);
+      log('PUBLISH ERROR: ' + (err.message || JSON.stringify(err)));
+      setChan('❌ Publish failed: ' + err.message, 'err');
     } else {
-      log('PUBLISHED: test-ping sent');
+      log('PUBLISHED successfully');
     }
   });
 }
