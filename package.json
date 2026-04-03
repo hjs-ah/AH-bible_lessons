@@ -1,0 +1,8 @@
+{
+  "name": "vow-teaching",
+  "version": "1.0.0",
+  "description": "VOW Center teaching presentation with Notion + Ably sync",
+  "engines": {
+    "node": "18.x"
+  }
+}
