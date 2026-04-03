@@ -893,11 +893,25 @@ function initAbly() {
   const client = new Ably.Realtime({ key: ABLY_KEY });
   ablyChannel  = client.channels.get(CHANNEL_NAME);
 
-  client.connection.on('connected', () => setSyncStatus('connected', 'Live'));
+  client.connection.on('connected', () => {
+    setSyncStatus('connected', 'Live');
+    // When a student connects, request the current presenter state
+    // so they catch up immediately even if they joined mid-session
+    if (!isPresenter) {
+      ablyChannel.publish('student-joined', { ts: Date.now() });
+    }
+  });
   client.connection.on('disconnected', () => setSyncStatus('', 'Offline'));
-  client.connection.on('failed', () => setSyncStatus('', 'Offline'));
+  client.connection.on('failed',       () => setSyncStatus('', 'Offline'));
 
-  // Listen for presenter broadcasts
+  // ── Presenter listens for students joining and re-broadcasts state ──────
+  ablyChannel.subscribe('student-joined', () => {
+    if (!isPresenter) return;
+    // Re-send current state so late-joining students catch up
+    broadcastState();
+  });
+
+  // ── Students receive presenter state ────────────────────────────────────
   ablyChannel.subscribe('presenter-state', (msg) => {
     if (isPresenter) return; // presenter ignores own echoes
     const { slide, locked, ceiling, content } = msg.data;
@@ -911,21 +925,26 @@ function initAbly() {
       });
     }
 
-    // Apply lock state
-    slideLocked  = locked;
-    lockCeiling  = ceiling;
+    // Apply lock state — this is the authoritative source for students
+    slideLocked = locked;
+    lockCeiling = locked ? ceiling : TOTAL - 1;
 
-    // Follow slide
+    // Follow the presenter's slide when locked
     if (locked) {
-      goTo(slide);
-    } else {
-      // Unlocked — just update ceiling, don't force navigation
-      lockCeiling = TOTAL - 1;
-      updateLockUI();
+      // Force navigation — bypass local ceiling check by setting ceiling first
+      const target = Math.max(0, Math.min(TOTAL - 1, slide));
+      document.getElementById('slide-' + current).classList.remove('active');
+      dotsEl.children[current].classList.remove('active');
+      current = target;
+      document.getElementById('slide-' + current).classList.add('active');
+      dotsEl.children[current].classList.add('active');
+      document.getElementById('counter').textContent = (current + 1) + ' / ' + TOTAL;
+      const nameBadge = document.getElementById('badgeName');
+      current === 0 ? nameBadge.classList.remove('visible') : nameBadge.classList.add('visible');
     }
 
-    // Update following indicator
-    setSyncStatus('following', 'Following');
+    updateLockUI();
+    setSyncStatus('following', locked ? 'Following' : 'Live');
   });
 }
 
