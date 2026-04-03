@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ably Test</title>
+<script src="https://cdn.ably.com/lib/ably.min-2.js"></script>
+<style>
+  body { font-family: monospace; padding: 20px; max-width: 600px; margin: 0 auto; }
+  h2 { font-size: 16px; }
+  #log { background: #f4f4f4; padding: 12px; border-radius: 4px; min-height: 120px; font-size: 13px; white-space: pre-wrap; }
+  button { margin: 6px 4px; padding: 8px 16px; font-size: 13px; cursor: pointer; }
+  .status { font-size: 13px; margin: 8px 0; }
+  .ok  { color: green; }
+  .err { color: red; }
+</style>
+</head>
+<body>
+<h2>Ably Connection Test</h2>
+<p class="status" id="connStatus">Connecting…</p>
+<button onclick="sendTest()">📤 Send Test Message</button>
+<button onclick="clearLog()">Clear</button>
+<h2>Message Log</h2>
+<div id="log">Waiting…</div>
+
+<script>
+const ABLY_KEY     = 'Wb8VkQ.4EToWQ:Ref9ahu7QBsNeuTdutlCEXSZ6HR-dSFmpLuvNbS-uag';
+const CHANNEL_NAME = 'vow-teaching-dont-come-empty';
+let channel;
+
+function log(msg) {
+  const el = document.getElementById('log');
+  const ts = new Date().toLocaleTimeString();
+  el.textContent = `[${ts}] ${msg}\n` + el.textContent;
+}
+
+function clearLog() { document.getElementById('log').textContent = ''; }
+
+const client = new Ably.Realtime({ key: ABLY_KEY });
+
+client.connection.on('connected', () => {
+  document.getElementById('connStatus').textContent = '✅ Connected to Ably';
+  document.getElementById('connStatus').className = 'status ok';
+  log('CONNECTION: established');
+});
+
+client.connection.on('failed', (err) => {
+  document.getElementById('connStatus').textContent = '❌ Connection failed: ' + (err?.reason?.message || 'unknown');
+  document.getElementById('connStatus').className = 'status err';
+  log('CONNECTION FAILED: ' + JSON.stringify(err?.reason));
+});
+
+client.connection.on('disconnected', () => {
+  document.getElementById('connStatus').textContent = '⚠️ Disconnected';
+  log('DISCONNECTED');
+});
+
+channel = client.channels.get(CHANNEL_NAME);
+
+channel.subscribe((msg) => {
+  log(`RECEIVED [${msg.name}]: ${JSON.stringify(msg.data)}`);
+});
+
+channel.on('failed', (err) => {
+  log('CHANNEL FAILED: ' + JSON.stringify(err));
+});
+
+function sendTest() {
+  channel.publish('test-ping', {
+    msg: 'hello from ' + (window.location.hostname || 'browser'),
+    ts: Date.now()
+  }, (err) => {
+    if (err) {
+      log('PUBLISH ERROR: ' + err.message);
+    } else {
+      log('PUBLISHED: test-ping sent');
+    }
+  });
+}
+</script>
+</body>
+</html>

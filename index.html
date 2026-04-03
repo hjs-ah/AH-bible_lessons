@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Don't Come Empty — First Fruits & Feast Giving</title>
+<title>Learning with Verity</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📖</text></svg>">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,700;0,900;1,400;1,700&family=Outfit:wght@200;300;400;500;600&display=swap" rel="stylesheet">
 <!-- Ably realtime SDK -->
@@ -434,6 +434,25 @@ html, body {
   .slide-content.left-align { padding:24px 20px 0; }
   .principle-num { font-size:28px; width:34px; }
 }
+
+/* ============================================================
+   PORTRAIT HINT — slide 1 only, mobile only
+   ============================================================ */
+.portrait-hint {
+  position:absolute; bottom:118px; left:50%;
+  transform:translateX(-50%);
+  display:flex; align-items:center; gap:10px;
+  opacity:0.4; pointer-events:none;
+  white-space:nowrap; z-index:3;
+}
+.portrait-hint svg { width:14px; height:22px; flex-shrink:0; }
+.portrait-hint span {
+  font-size:9px; letter-spacing:2px;
+  text-transform:uppercase; font-weight:600;
+  color:var(--text-muted); font-family:'Outfit',sans-serif;
+}
+@media (min-width:700px) { .portrait-hint { display:none; } }
+@media (orientation:landscape) and (max-width:900px) { .portrait-hint { opacity:0.7; } }
 </style>
 </head>
 <body>
@@ -470,6 +489,15 @@ html, body {
       <p class="t-subtitle" data-editable="s0-subtitle">First Fruits, Feast Giving,<br>and the Contemporary Offering</p>
       <p class="facilitator" data-editable="s0-facilitator">Facilitated by Antone Holmes</p>
       <span class="t-ref" data-editable="s0-ref">Exodus 23:15 · Deuteronomy 16:16–17 · Proverbs 3:9–10</span>
+    </div>
+    <!-- Portrait mode hint — mobile only -->
+    <div class="portrait-hint">
+      <svg viewBox="0 0 14 22" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="1" y="1" width="12" height="20" rx="2" stroke="currentColor" stroke-width="1.5"/>
+        <circle cx="7" cy="18" r="1" fill="currentColor"/>
+        <line x1="4" y1="3.5" x2="10" y2="3.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+      </svg>
+      <span>Best viewed in portrait mode</span>
     </div>
   </div>
 
@@ -892,7 +920,10 @@ function hideLoading() {
 let ablyConnected = false;
 
 function initAbly() {
-  const client = new Ably.Realtime({ key: ABLY_KEY });
+  // Generate a unique clientId for this session
+  // Without clientId, Ably browser clients may not receive their own channel messages
+  const clientId = 'client-' + Math.random().toString(36).slice(2, 9);
+  const client = new Ably.Realtime({ key: ABLY_KEY, clientId });
   ablyChannel  = client.channels.get(CHANNEL_NAME);
 
   client.connection.on('connected', () => {
