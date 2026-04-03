@@ -811,7 +811,7 @@ html, body {
 const TOTAL      = 13;
 const ABLY_KEY   = 'Wb8VkQ.4EToWQ:Ref9ahu7QBsNeuTdutlCEXSZ6HR-dSFmpLuvNbS-uag';
 const CHANNEL_NAME = 'vow-teaching-dont-come-empty';
-const EDITOR_PIN = '2408';
+// PIN is validated server-side via /api/pin — not stored here
 
 /* ============================================================
    STATE
@@ -1034,17 +1034,30 @@ function promptLockPin() {
   });
 }
 
-function checkLockPin() {
+async function checkLockPin() {
   const val = document.getElementById('lockPinInput').value;
-  if (val === EDITOR_PIN) {
-    lockPinVerified = true;
-    isPresenter     = true;
-    document.getElementById('lockPinOverlay').remove();
-    toggleLock();
-  } else {
-    document.getElementById('lockPinError').textContent = 'Incorrect PIN.';
+  const errEl = document.getElementById('lockPinError');
+  errEl.textContent = 'Checking…';
+  try {
+    const res  = await fetch('/api/pin', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ pin: val }),
+    });
+    const data = await res.json();
+    if (data.valid) {
+      lockPinVerified = true;
+      isPresenter     = true;
+      document.getElementById('lockPinOverlay').remove();
+      toggleLock();
+    } else {
+      errEl.textContent = 'Incorrect PIN.';
+      document.getElementById('lockPinInput').value = '';
+      document.getElementById('lockPinInput').focus();
+    }
+  } catch (e) {
+    errEl.textContent = 'Connection error. Try again.';
     document.getElementById('lockPinInput').value = '';
-    document.getElementById('lockPinInput').focus();
   }
 }
 
@@ -1069,18 +1082,31 @@ function promptPin() {
   });
 }
 
-function checkPin() {
-  const val = document.getElementById('pinInput').value;
-  if (val === EDITOR_PIN) {
-    presenterUnlocked = true;
-    isPresenter       = true;
-    document.querySelector('[onclick="promptPin()"]').textContent = '✏️';
-    document.getElementById('pinOverlay').remove();
-    openEditor();
-  } else {
-    document.getElementById('pinError').textContent = 'Incorrect PIN.';
+async function checkPin() {
+  const val   = document.getElementById('pinInput').value;
+  const errEl = document.getElementById('pinError');
+  errEl.textContent = 'Checking…';
+  try {
+    const res  = await fetch('/api/pin', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ pin: val }),
+    });
+    const data = await res.json();
+    if (data.valid) {
+      presenterUnlocked = true;
+      isPresenter       = true;
+      document.querySelector('[onclick="promptPin()"]').textContent = '✏️';
+      document.getElementById('pinOverlay').remove();
+      openEditor();
+    } else {
+      errEl.textContent = 'Incorrect PIN.';
+      document.getElementById('pinInput').value = '';
+      document.getElementById('pinInput').focus();
+    }
+  } catch (e) {
+    errEl.textContent = 'Connection error. Try again.';
     document.getElementById('pinInput').value = '';
-    document.getElementById('pinInput').focus();
   }
 }
 
