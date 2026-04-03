@@ -1,20 +1,16 @@
 /**
  * /api/slides.js  — Vercel Serverless Function
- * Proxies Notion API. Token never touches frontend code.
+ * Notion DB columns: "slide_key" (Title type), "content" (Text type)
  *
- * Notion DB schema expected:
- *   "Title"   — Title property  (renamed from "Name")
- *   "content" — Text property
- *
- * GET  /api/slides  → returns { [Title_value]: content_value, ... }
- * POST /api/slides  → upserts a row  { slide_key, content }
+ * GET  /api/slides  → { [slide_key]: content, ... }
+ * POST /api/slides  → upsert { slide_key, content }
  */
 
 const NOTION_TOKEN   = process.env.NOTION_TOKEN;
 const NOTION_DB_ID   = process.env.NOTION_DB_ID;
 const NOTION_VERSION = '2022-06-28';
 
-function notionHeaders() {
+function headers() {
   return {
     'Authorization':  `Bearer ${NOTION_TOKEN}`,
     'Notion-Version': NOTION_VERSION,
@@ -33,13 +29,12 @@ module.exports = async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end();
 
   if (!NOTION_TOKEN || !NOTION_DB_ID) {
-    console.error('Missing env vars');
-    return res.status(500).json({ error: 'Server misconfiguration' });
+    return res.status(500).json({ error: 'Missing env vars NOTION_TOKEN or NOTION_DB_ID' });
   }
 
   try {
-    if (req.method === 'GET')       return await getSlides(res);
-    if (req.method === 'POST')      return await saveSlide(req, res);
+    if (req.method === 'GET')  return await getSlides(res);
+    if (req.method === 'POST') return await saveSlide(req, res);
     return res.status(405).json({ error: 'Method not allowed' });
   } catch (err) {
     console.error('API error:', err);
@@ -47,61 +42,58 @@ module.exports = async function handler(req, res) {
   }
 };
 
+// ── GET ───────────────────────────────────────────────────────────────────────
 async function getSlides(res) {
-  const response = await fetch(
+  const r = await fetch(
     `https://api.notion.com/v1/databases/${NOTION_DB_ID}/query`,
-    { method: 'POST', headers: notionHeaders(), body: JSON.stringify({ page_size: 100 }) }
+    { method: 'POST', headers: headers(), body: JSON.stringify({ page_size: 100 }) }
   );
-  const raw = await response.text();
-  if (!response.ok) {
-    console.error('Notion GET error:', response.status, raw);
-    return res.status(response.status).json({ error: raw });
+  const raw = await r.text();
+  if (!r.ok) {
+    console.error('Notion GET error:', r.status, raw);
+    return res.status(r.status).json({ error: raw });
   }
-  const data   = JSON.parse(raw);
   const slides = {};
-  for (const page of data.results) {
-    // Handles "Title", "slide_key", or "Name" — whichever your DB uses
-    const titleProp =
-      page.properties?.Title     ??
-      page.properties?.slide_key ??
-      page.properties?.Name      ?? null;
-    const key = titleProp?.title?.[0]?.plain_text;
-    if (!key) continue;
-    slides[key] = page.properties?.content?.rich_text?.[0]?.plain_text ?? '';
+  for (const page of JSON.parse(raw).results) {
+    const key     = page.properties?.slide_key?.title?.[0]?.plain_text;
+    const content = page.properties?.content?.rich_text?.[0]?.plain_text ?? '';
+    if (key) slides[key] = content;
   }
   return res.status(200).json(slides);
 }
 
+// ── POST — upsert ─────────────────────────────────────────────────────────────
 async function saveSlide(req, res) {
   const { slide_key, content } = req.body ?? {};
   if (!slide_key) return res.status(400).json({ error: 'slide_key required' });
 
-  // Query for existing row
-  const queryRes = await fetch(
+  // Find existing row
+  const qr = await fetch(
     `https://api.notion.com/v1/databases/${NOTION_DB_ID}/query`,
     {
-      method: 'POST', headers: notionHeaders(),
+      method:  'POST',
+      headers: headers(),
       body: JSON.stringify({
-        filter: { property: 'Title', title: { equals: slide_key } }
+        filter: { property: 'slide_key', title: { equals: slide_key } }
       }),
     }
   );
-  const queryRaw  = await queryRes.text();
-  if (!queryRes.ok) {
-    console.error('Notion query error:', queryRes.status, queryRaw);
-    return res.status(queryRes.status).json({ error: queryRaw });
+  const qraw = await qr.text();
+  if (!qr.ok) {
+    console.error('Notion query error:', qr.status, qraw);
+    return res.status(qr.status).json({ error: qraw });
   }
-  const existing = JSON.parse(queryRaw).results?.[0];
+
+  const existing = JSON.parse(qraw).results?.[0];
+  const contentProp = {
+    content: { rich_text: [{ type: 'text', text: { content: content ?? '' } }] }
+  };
 
   if (existing) {
     // UPDATE
     const r = await fetch(`https://api.notion.com/v1/pages/${existing.id}`, {
-      method: 'PATCH', headers: notionHeaders(),
-      body: JSON.stringify({
-        properties: {
-          content: { rich_text: [{ type: 'text', text: { content: content ?? '' } }] }
-        }
-      }),
+      method: 'PATCH', headers: headers(),
+      body: JSON.stringify({ properties: contentProp }),
     });
     const raw = await r.text();
     if (!r.ok) { console.error('Update error:', r.status, raw); return res.status(r.status).json({ error: raw }); }
@@ -109,12 +101,12 @@ async function saveSlide(req, res) {
   } else {
     // CREATE
     const r = await fetch('https://api.notion.com/v1/pages', {
-      method: 'POST', headers: notionHeaders(),
+      method: 'POST', headers: headers(),
       body: JSON.stringify({
         parent: { database_id: NOTION_DB_ID },
         properties: {
-          Title:   { title:     [{ type: 'text', text: { content: slide_key } }] },
-          content: { rich_text: [{ type: 'text', text: { content: content ?? '' } }] },
+          slide_key: { title: [{ type: 'text', text: { content: slide_key } }] },
+          ...contentProp,
         },
       }),
     });

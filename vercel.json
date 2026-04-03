@@ -1,6 +1,5 @@
 {
   "rewrites": [
-    { "source": "/api/slides", "destination": "/api/slides" },
-    { "source": "/(.*)",       "destination": "/index.html" }
+    { "source": "/((?!api).*)", "destination": "/index.html" }
   ]
 }
